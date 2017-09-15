@@ -1,0 +1,6 @@
+#template Compile tests
+g++ -o testRunner.exe TeamTest.cpp tests-main.cpp  ../src/Team.cpp ../src/ProprietaryAlgorithms.cpp ../src/GameWeek.cpp  -I ../src -std=c++14
+
+#Template Compile src->executable
+cd /Users/NiranPyzzle/Documents/softwareProjects/fantasyPremierLeague/engine/src
+g++ -std=c++14 -o sample.exe main.cpp ProprietaryAlgorithms.cpp Team.cpp Settings.cpp Chips.cpp Player.cpp fantasyExceptions.cpp
