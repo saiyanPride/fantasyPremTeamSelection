@@ -19,7 +19,7 @@ wait = WebDriverWait(driver, 10)
 waitIntervalForStatisticsPageChange_secs = 1
 minNoPlayerPerPage = 16
 gameweekNo = 0
-# css selectors
+# css selectors 
 lastPageAnchorElementSelector = '#ismr-main > div > div.paginationContainer.ism-pagination > \
                     a.paginationBtn.ismjs-change-page.ism-pagination__button.ism-pagination__button--secondary'  # it's href attribute has the number of pages href='#17'
 usernameInputElementSelector = "#ismjs-username"
@@ -48,6 +48,7 @@ fifthColumnValueSelectorTemplate = '#ismr-main > div > div.table.ism-scroll-tabl
 # playerAssistsSelectorTemplate
 # playerBonusSelectorTemplate
 # urls
+myTeamUrl="https://fantasy.premierleague.com/a/team/my"
 transfersPageUrl = "https://fantasy.premierleague.com/a/squad/transfers"
 minutesPlayedStatisticsPageUrl = "https://fantasy.premierleague.com/a/statistics/minutes"
 goalsScoredStatisticsPageUrl = "https://fantasy.premierleague.com/a/statistics/goals_scored"
@@ -83,7 +84,7 @@ def getStatus():
     2) Free hit
     3) Triple Captain
     """
-
+    driver.get(myTeamUrl)
     for index, selector in enumerate(cssSelectors):
         wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, selector)))
         elem = driver.find_element_by_css_selector(selector)
@@ -114,10 +115,16 @@ def getStatus():
     retrievedText = []
 
     for index, selector in enumerate(otherStatusSelectors):
-        wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, selector)))
-        elem = driver.find_element_by_css_selector(selector)
-        text = elem.text
-        retrievedText.insert(index, text)
+        try:
+            wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, selector)))
+            elem = driver.find_element_by_css_selector(selector)
+            text = elem.text
+            retrievedText.insert(index, text)
+        except:
+            if selector == wildCardAvailabilityElementSelector:
+                retrievedText.insert(index, "unavailable")
+            else: 
+                raise             
 
     noFreeTransfers = int(retrievedText[0])
     # TODO: simplify
@@ -134,8 +141,12 @@ def getStatus():
     if (wildCardAvailable):
         print "Wild card is available"
 
-    return Status(wildCardAvailable, freehitAvailable, tripleCaptainAvailable, benchBoostAvailable, noFreeTransfers, bankBalance, gameweekNo)
-
+    status = Status(wildCardAvailable, freehitAvailable, tripleCaptainAvailable, benchBoostAvailable, noFreeTransfers, bankBalance, gameweekNo)
+    statusJson=status.getJson()
+    statusFile=open('status.json','w')
+    statusFile.write(statusJson)
+    statusFile.close()
+    return status
 
 def updatePlayerData(gameweekNo):
     # create map
@@ -332,4 +343,8 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    #main()
+    password = raw_input('Enter your password: ')
+    login("niranfor1@hotmail.com", password)
+    status = getStatus()
+    
