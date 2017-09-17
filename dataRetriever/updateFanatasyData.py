@@ -286,8 +286,8 @@ def updatePlayerScores(playersMap, gameweekNo):
 
 
 def updateDatabaseWithPlayers(playersMap):
-    sqlDatabase.cursor.execute("DROP TABLE Player")
-    sqlDatabase.cursor.execute("CREATE TABLE Player (\
+    sqlDatabase.cursor.execute("DROP TABLE PlayerStats")
+    sqlDatabase.cursor.execute("CREATE TABLE PlayerStats (\
         PlayerID int NOT NULL PRIMARY KEY,\
         Club varchar(255),\
         Name varchar(255),\
@@ -303,7 +303,8 @@ def updateDatabaseWithPlayers(playersMap):
         SecondGameweekScore float,\
         ThirdGameweekScore float,\
         FourthGameweekScore float,\
-        FifthGameweekScore float \
+        FifthGameweekScore float, \
+        AvgScore float \
         )")
     id = -1
     for key, player in playersMap.items():
@@ -314,9 +315,10 @@ def updateDatabaseWithPlayers(playersMap):
         thirdGwScore = scores[2]
         fourthGwScore = scores[3]
         fifthGwScore = scores[4]
-        sqlDatabase.cursor.execute("INSERT INTO Player VALUES (%d,'%s','%s','%s',%f,%f,%d,%d,%d,%d,%d,%f,%f,%f,%f,%f)"
+        avgScore = sum(scores)/len(scores)
+        sqlDatabase.cursor.execute("INSERT INTO PlayerStats VALUES (%d,'%s','%s','%s',%f,%f,%d,%d,%d,%d,%d,%f,%f,%f,%f,%f,%f)"
                                    % (id, player.club, player.name, player.position, player.value, player.form, player.minutesPlayed, player.goals, player.assists, player.bonus, player.cleansheets,
-                                      firstGwScore, secondGwScore, thirdGwScore, fourthGwScore, fifthGwScore))
+                                      firstGwScore, secondGwScore, thirdGwScore, fourthGwScore, fifthGwScore,avgScore))
         sqlDatabase.connection.commit()
 
 

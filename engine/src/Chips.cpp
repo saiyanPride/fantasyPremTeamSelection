@@ -20,7 +20,7 @@ Chips::~Chips()
 void Chips::update()
 {
     //TODO2
-    //update availability/status of all chips
+    //update availability/status of all chips (read from file)
     //throw exception if unsuccessful
 }
 
