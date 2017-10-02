@@ -343,8 +343,5 @@ def main():
 
 
 if __name__ == '__main__':
-    #main()
-    password = raw_input('Enter your password: ')
-    login("niranfor1@hotmail.com", password)
-    status = getStatus()
-    
+    main()
+    driver.quit

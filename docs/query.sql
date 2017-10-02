@@ -27,58 +27,43 @@ insert into Clubs (ClubId, Name) VALUES (19, 'WAT');
 SELECT * FROM Clubs;
 
 
+/*Gameweek Difficulty*/
+
+DROP TABLE GameweekDifficulty;
 CREATE TABLE GameweekDifficulty (
 GId int NOT NULL PRIMARY KEY,
 ClubId int NOT NULL FOREIGN KEY REFERENCES Clubs(ClubId),
-FIRST_GW TINYINT(5),
-SECOND_GW TINYINT(5),
-THIRD_GW TINYINT(5),
-FOURTH_GW TINYINT(5),
-FIFTH_GW TINYINT(5)
+FIRST_GW TINYINT,
+SECOND_GW TINYINT,
+THIRD_GW TINYINT,
+FOURTH_GW TINYINT,
+FIFTH_GW TINYINT
 );
+SELECT * FROM GameweekDifficulty;
 
-insert into GameweekDifficulty VALUES (0, 0,2,3,4,2,4);
-insert into GameweekDifficulty VALUES (1, 1,3,3,2,4,2);
-insert into GameweekDifficulty VALUES (2, 2,2,4,2,2,2);
-insert into GameweekDifficulty VALUES (3, 3,2,2,2,2,4);
-insert into GameweekDifficulty VALUES (4, 4,4,2,4,2,2);
-insert into GameweekDifficulty VALUES (5, 5,2,4,4,4,2);
-insert into GameweekDifficulty VALUES (6, 6,4,2,2,2,4);
-insert into GameweekDifficulty VALUES (7, 7,5,2,1,2,4);
-insert into GameweekDifficulty VALUES (8,8, 2,2,5,2,2);
-insert into GameweekDifficulty VALUES (9,9, 1,4,2,4,2);
-insert into GameweekDifficulty VALUES (10,10, 2,2,4,3,2);
-insert into GameweekDifficulty VALUES (11,11, 4,2,4,2,4);
-insert into GameweekDifficulty VALUES (12,12, 2,3,2,4,4);
-insert into GameweekDifficulty VALUES (13,13, 2,4,2,3,1);
-insert into GameweekDifficulty VALUES (14,14, 2,4,2,3,3);
-insert into GameweekDifficulty VALUES (15,15, 4,2,2,2,2);
-insert into GameweekDifficulty VALUES (16,16, 2,4,2,4,2);
-insert into GameweekDifficulty VALUES (17,17, 2,2,4,3,2);
-insert into GameweekDifficulty VALUES (18,18, 2,4,2,2,2);
-insert into GameweekDifficulty VALUES (19,19, 4,2,2,4,5);
+/*GW7 to gw11*/
+insert into GameweekDifficulty VALUES (0,0, 4,2,4,4,2);
+insert into GameweekDifficulty VALUES (1,1, 2,4,2,4,5);
+insert into GameweekDifficulty VALUES (2,2, 2,2,2,2,2);
+insert into GameweekDifficulty VALUES (3,3, 2,2,4,4,2);
+insert into GameweekDifficulty VALUES (4,4, 4,2,2,2,4);
+insert into GameweekDifficulty VALUES (5,5, 4,4,2,2,4);
+insert into GameweekDifficulty VALUES (6,6, 2,2,4,3,2);
+insert into GameweekDifficulty VALUES (7,7, 1,2,4,2,4);
+insert into GameweekDifficulty VALUES (8,8, 5,2,2,2,4);
+insert into GameweekDifficulty VALUES (9,9, 2,4,2,4,2);
+insert into GameweekDifficulty VALUES (10,10, 4,3,2,2,2);
+insert into GameweekDifficulty VALUES (11,11, 4,2,4,2,3);
+insert into GameweekDifficulty VALUES (12,12, 2,4,4,2,2);
+insert into GameweekDifficulty VALUES (13,13, 2,3,1,2,4);
+insert into GameweekDifficulty VALUES (14,14, 2,3,3,4,2);
+insert into GameweekDifficulty VALUES (15,15, 2,2,2,4,1);
+insert into GameweekDifficulty VALUES (16,16, 2,4,2,2,2);
+insert into GameweekDifficulty VALUES (17,17, 4,3,2,3,2);
+insert into GameweekDifficulty VALUES (18,18, 2,2,2,3,2);
+insert into GameweekDifficulty VALUES (19,19, 2,4,5,2,4);
 
 #Query to view gameweek difficulties of clubs
 SELECT Clubs.Name, FIRST_GW, SECOND_GW, THIRD_GW, FOURTH_GW, FIFTH_GW FROM 
 GameweekDifficulty LEFT JOIN Clubs
 ON GameweekDifficulty.ClubId = Clubs.ClubId
-
-#Creating player tables
-CREATE TABLE Player (
-PlayerID int NOT NULL PRIMARY KEY,
-Club varchar(255),
-Name varchar(255),
-Position varchar(255),
-Value float,
-Form float,
-MinutesPlayed int,
-Goals int,
-Assists int,
-Bonus int,
-Cleansheets int,
-FirstGameweekScore float,
-SecondGameweekScore float,
-ThirdGameweekScore float,
-FourthGameweekScore float,
-FifthGameweekScore float
-);
