@@ -1,6 +1,7 @@
 #include "Team.hpp"
 #include <memory>
-#include <iostream>//
+#include <iostream>
+#include "Chips.hpp"
 
 void displaySuggestedChanges(std::shared_ptr<Team::Changes> suggestedChanges){
     //indicate whether changes are being recommended
@@ -43,6 +44,7 @@ void implementChanges(std::shared_ptr<Team::Changes> suggestedChanges){
     std::cout<<"implementing changes"<<std::endl;
 };
 int main(){
+    Chips::getChips(); //update status of chips
     std::cout<<"Have you updated gameweek difficulties in your database?\n enter '0' if you haven't"<<std::endl;
     bool response;
     std::cin>>response;

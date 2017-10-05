@@ -1,7 +1,13 @@
 #ifndef FANTASY_CHIPS
     #define FANTASY_CHIPS
+    
     #include <cstdint>
+    #include <fstream>
+    #include <iostream>
+    #include <string>
     #include <exception>
+    #include <map>
+    #include "fantasyExceptions.hpp"
 
     class Chips{//chips are used to make changes to one's team
         static Chips* singleton;      
