@@ -9,7 +9,7 @@ from customDataStructures import Status
 from customDataStructures import PlayerData
 from pprint import pprint
 from itertools import izip
-import sqlDatabase
+#import sqlDatabase  UNDO
 
 #driver = webdriver.Firefox(executable_path=r'/Users/NiranPyzzle/Downloads/geckodriver')
 driver = webdriver.PhantomJS(
@@ -19,6 +19,8 @@ wait = WebDriverWait(driver, 10)
 waitIntervalForStatisticsPageChange_secs = 1
 minNoPlayerPerPage = 16
 gameweekNo = 0
+noPremierLeagueTeams = 20
+noGWDifficultiesToExtract = 5
 # css selectors 
 lastPageAnchorElementSelector = '#ismr-main > div > div.paginationContainer.ism-pagination > \
                     a.paginationBtn.ismjs-change-page.ism-pagination__button.ism-pagination__button--secondary'  # it's href attribute has the number of pages href='#17'
@@ -44,6 +46,13 @@ playerMinutesPlayedSelectorTemplate = '#ismr-main > div > div.table.ism-scroll-t
 # used to extract goals, assists, bonus, clean sheets from statistics table
 fifthColumnValueSelectorTemplate = '#ismr-main > div > div.table.ism-scroll-table > table > tbody > tr:nth-child(%s) > td:nth-child(7)'
 
+#statistics goalkeeper view page css selectors & templates
+completeStatsGkPageLoadElementFlagSelector = "#ismr-main > div > div.table.ism-scroll-table > table > tbody > tr:nth-child(30) > td.ism-table--el__status > a" #presenece of this elements indicates the page has loaded
+gkInfoButtonSelectorTemplate = '#ismr-main > div > div.table.ism-scroll-table > table > tbody > tr:nth-child(%s) > td.ism-table--el__status > a > svg'
+fixturesButtonSelector= '#ismr-element > div > div.ism-dialog__scroll > div:nth-child(1) > div.ismjs-a11y-tabs.ism-tabs.ism-eiw-detail > ul > li:nth-child(2) > a'
+fixturesButtonXpath = '//*[@id="ismr-element"]/div/div[2]/div[1]/div[2]/ul/li[2]/a'
+gameWeekDifficultyTableDataElementSelectorTemplate = '#ismr-element-fixtures > div > div > table > tbody > tr:nth-child(%s) > td:nth-child(4)'
+
 # playerGoalsSelectorTemplate
 # playerAssistsSelectorTemplate
 # playerBonusSelectorTemplate
@@ -55,6 +64,7 @@ goalsScoredStatisticsPageUrl = "https://fantasy.premierleague.com/a/statistics/g
 assistsStatisticsPageUrl = "https://fantasy.premierleague.com/a/statistics/assists"
 bonusStatisticsPageUrl = "https://fantasy.premierleague.com/a/statistics/bonus"
 cleanSheetsStatisticsPageUrl = "https://fantasy.premierleague.com/a/statistics/clean_sheets"
+goalKeeperViewStatisticsPageUrl = "https://fantasy.premierleague.com/a/statistics/total_points/et_1"
 
 
 def login(username, password):
@@ -333,6 +343,39 @@ def updateDatabaseWithPlayers(playersMap):
         sqlDatabase.connection.commit()
 
 
+def updateGameWeekDifficulty():
+    #navigate to statistics Goalkeeper view page
+    driver.get(goalKeeperViewStatisticsPageUrl)
+    wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, completeStatsGkPageLoadElementFlagSelector)))
+    gameWeekDiffcultiesByClubDic = dict()
+    noClubsCompleted = 0
+    row = 1
+    #Extract data for each club
+    while noClubsCompleted != noPremierLeagueTeams:
+        playerClub = driver.find_element_by_css_selector(
+                    playerClubSelectorTemplate % (row)).text
+        
+        if playerClub not in gameWeekDiffcultiesByClubDic:
+            driver.find_element_by_css_selector(gkInfoButtonSelectorTemplate % (row)).click() #click on GK info
+            
+            #click on fixtures button
+            wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, fixturesButtonSelector)))
+            driver.get_screenshot_as_file('screenshot.png') # TODO: remove
+            driver.find_element_by_xpath(fixturesButtonXpath).click() #ISSUE IS HERE
+            #wait for difficulties to appear
+            wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, gameWeekDifficultyTableDataElementSelectorTemplate % (noGWDifficultiesToExtract))))
+            
+            def getGWD(ithWeekAway): return driver.find_element_by_css_selector(gameWeekDifficultyTableDataElementSelectorTemplate % (row)).text
+            gameweekDifficultyList = [ getGWD(i) for i in range(0,noGWDifficultiesToExtract) ]
+
+            #store {playerClub, gwdList} as {key, Value}
+            gameWeekDiffcultiesByClubDic[playerClub] = gameweekDifficultyList
+            noClubsCompleted = noClubsCompleted + 1
+        row = row +1
+    
+    print(gameWeekDiffcultiesByClubDic)
+
+
 def main():
     password = raw_input('Enter your password: ')
     login("niranfor1@hotmail.com", password)
@@ -341,7 +384,10 @@ def main():
     updateDatabaseWithPlayers(playersMap)
     sqlDatabase.connection.close()
 
-
+def testGetGWDtemp():
+    password = raw_input('Enter your password: ')
+    login("niranfor1@hotmail.com", password)
+    updateGameWeekDifficulty()
 if __name__ == '__main__':
-    main()
+    testGetGWDtemp()#main()
     driver.quit
