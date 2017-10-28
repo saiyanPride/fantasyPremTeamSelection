@@ -1,9 +1,11 @@
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
+from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
+
 import time
 from customDataStructures import Status
 from customDataStructures import PlayerData
@@ -15,7 +17,7 @@ from itertools import izip
 driver = webdriver.PhantomJS(
     executable_path=r'/Users/NiranPyzzle/Downloads/phantomjs-2.1.1-macosx/bin/phantomjs')
 driver.get("https://fantasy.premierleague.com/")
-wait = WebDriverWait(driver, 10)
+wait = WebDriverWait(driver, 30)
 waitIntervalForStatisticsPageChange_secs = 1
 minNoPlayerPerPage = 16
 gameweekNo = 0
@@ -47,12 +49,9 @@ playerMinutesPlayedSelectorTemplate = '#ismr-main > div > div.table.ism-scroll-t
 fifthColumnValueSelectorTemplate = '#ismr-main > div > div.table.ism-scroll-table > table > tbody > tr:nth-child(%s) > td:nth-child(7)'
 
 #statistics goalkeeper view page css selectors & templates
-completeStatsGkPageLoadElementFlagSelector = "#ismr-main > div > div.table.ism-scroll-table > table > tbody > tr:nth-child(30) > td.ism-table--el__status > a" #presenece of this elements indicates the page has loaded
+completeStatsGkPageLoadElementFlagSelector = "#ismr-main > div > div.table.ism-scroll-table > table > tbody > tr:nth-child(30) > td.ism-table--el__status > a > svg" #presenece of this elements indicates the page has loaded
 gkInfoButtonSelectorTemplate = '#ismr-main > div > div.table.ism-scroll-table > table > tbody > tr:nth-child(%s) > td.ism-table--el__status > a > svg'
-fixturesButtonSelector= '#ismr-element > div > div.ism-dialog__scroll > div:nth-child(1) > div.ismjs-a11y-tabs.ism-tabs.ism-eiw-detail > ul > li:nth-child(2) > a'
-fixturesButtonXpath = '//*[@id="ismr-element"]/div/div[2]/div[1]/div[2]/ul/li[2]/a'
-gameWeekDifficultyTableDataElementSelectorTemplate = '#ismr-element-fixtures > div > div > table > tbody > tr:nth-child(%s) > td:nth-child(4)'
-
+nthGameWeekDifficultySelector = '#ismr-element-fixtures > div > div > table > tbody > tr:nth-child(%s) > td:nth-child(4)'
 # playerGoalsSelectorTemplate
 # playerAssistsSelectorTemplate
 # playerBonusSelectorTemplate
@@ -351,27 +350,37 @@ def updateGameWeekDifficulty():
     noClubsCompleted = 0
     row = 1
     #Extract data for each club
+    """
+    Each row is visited, and for each row
+    One checks if data for the club has already been extracted
+    if it hasn't then goalkeeper's info button is clicked on
+    and the gameweek difficulty data is extracted
+    """
+    actions = ActionChains(driver) 
+    #navigate to first by info button by pressing tab 16 times       
+    actions.send_keys(Keys.TAB * 17)
     while noClubsCompleted != noPremierLeagueTeams:
-        playerClub = driver.find_element_by_css_selector(
-                    playerClubSelectorTemplate % (row)).text
-        
-        if playerClub not in gameWeekDiffcultiesByClubDic:
-            driver.find_element_by_css_selector(gkInfoButtonSelectorTemplate % (row)).click() #click on GK info
-            
-            #click on fixtures button
-            wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, fixturesButtonSelector)))
-            driver.get_screenshot_as_file('screenshot.png') # TODO: remove
-            driver.find_element_by_xpath(fixturesButtonXpath).click() #ISSUE IS HERE
-            #wait for difficulties to appear
-            wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, gameWeekDifficultyTableDataElementSelectorTemplate % (noGWDifficultiesToExtract))))
-            
-            def getGWD(ithWeekAway): return driver.find_element_by_css_selector(gameWeekDifficultyTableDataElementSelectorTemplate % (row)).text
-            gameweekDifficultyList = [ getGWD(i) for i in range(0,noGWDifficultiesToExtract) ]
+        driver.save_screenshot("screenshot.png")
+        wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, playerClubSelectorTemplate % (row))))
+        playerClub = driver.find_element_by_css_selector(playerClubSelectorTemplate % (row)).text
+        print ("current club is %s"% (playerClub))
+        #driver.implicitly_wait(3)
+        if playerClub not in gameWeekDiffcultiesByClubDic: # data not extracted for club of current goalie
+            actions.send_keys(Keys.ENTER)
+            actions.perform() #this is the last step in the simulation of clicking the info button
+            wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, nthGameWeekDifficultySelector % (noGWDifficultiesToExtract))))
+            def getGWD(ithWeekAway): return driver.find_element_by_css_selector(nthGameWeekDifficultySelector % (ithWeekAway)).text
+            gameweekDifficultyList = [ getGWD(i) for i in range(1,noGWDifficultiesToExtract+1) ] # starts from 1 not 0, due to css selector nth child syntax
 
             #store {playerClub, gwdList} as {key, Value}
             gameWeekDiffcultiesByClubDic[playerClub] = gameweekDifficultyList
             noClubsCompleted = noClubsCompleted + 1
-        row = row +1
+            actions.send_keys(Keys.ESCAPE) #close pop-up
+            actions.perform()
+            print("no clubs compl %d" %(noClubsCompleted))
+        #prepare for next player
+        row = row +1        
+        actions.send_keys(Keys.TAB * 2) # move to next row      
     
     print(gameWeekDiffcultiesByClubDic)
 
