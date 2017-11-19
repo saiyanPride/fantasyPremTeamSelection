@@ -7,6 +7,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 
 import time
+import xlsxwriter
 from customDataStructures import Status
 from customDataStructures import PlayerData
 from pprint import pprint
@@ -19,6 +20,8 @@ driver = webdriver.PhantomJS(
 driver.get("https://fantasy.premierleague.com/")
 wait = WebDriverWait(driver, 30)
 waitIntervalForStatisticsPageChange_secs = 1
+waitIntervalForGeneralPageChanges = 3
+waitIntervalToSimulateHumanUser = 10
 minNoPlayerPerPage = 16
 gameweekNo = 0
 noPremierLeagueTeams = 20
@@ -29,7 +32,9 @@ lastPageAnchorElementSelector = '#ismr-main > div > div.paginationContainer.ism-
 usernameInputElementSelector = "#ismjs-username"
 passwordInputElementSelector = '#ismjs-password'
 benchBoostButtonSelector = '#ismr-chips > ul > li:nth-child(1) > div > button'
-freehitButtonSelector = '#ismr-chips > ul > li:nth-child(2) > div > button'
+freehitButtonSelector = '#ismr-chips > ul > li:nth-child(2) > div > a > div.ism-button--chip--played__title'# unused freehit selector -> '#ismr-chips > ul > li:nth-child(2) > div > button'
+
+
 tripleCaptainButtonSelector = '#ismr-chips > ul > li:nth-child(3) > div > button'
 noFreeTransfersElementSelector = '#ismr-scoreboard > div > div.ism-scoreboard > div:nth-child(4) > div > div'
 bankBalanceElementSelector = '#ismr-scoreboard > div > div.ism-scoreboard > div:nth-child(6) > div > div'
@@ -65,6 +70,8 @@ bonusStatisticsPageUrl = "https://fantasy.premierleague.com/a/statistics/bonus"
 cleanSheetsStatisticsPageUrl = "https://fantasy.premierleague.com/a/statistics/clean_sheets"
 goalKeeperViewStatisticsPageUrl = "https://fantasy.premierleague.com/a/statistics/total_points/et_1"
 
+#database
+excelDataBasePath = 'fantasyPlayerData.xlsx'
 
 def login(username, password):
     # TODO: make sure arguments are strings
@@ -95,6 +102,7 @@ def getStatus():
     """
     driver.get(myTeamUrl)
     for index, selector in enumerate(cssSelectors):
+        print("[INFO] waiting for presence of selector")
         wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, selector)))
         elem = driver.find_element_by_css_selector(selector)
         chipAction = elem.text
@@ -305,7 +313,41 @@ def updatePlayerScores(playersMap, gameweekNo):
             gameweekDifficultyByClubMap[player.club], gameweekNo)
 
 
+def updateExcelSheetWithPlayers(playersMap): 
+    workbook = xlsxwriter.Workbook(excelDataBasePath)
+    worksheet = workbook.add_worksheet()
+    print("[INFO] Attempting to write player data to excel file named %s" % excelDataBasePath) 
+    row = 1
+    col = 0
+    id = -1
+
+    # create header row
+    headers = ['PlayerID','Club','Name','Position','Value','Form','MinutesPlayed','Goals','Assists',
+    'Bonus','Cleansheets','FirstGameweekScore','SecondGameweekScore',
+    'ThirdGameweekScore','FourthGameweekScore','FifthGameweekScore','AvgScore']
+
+    for colNo, header in enumerate(headers):
+        worksheet.write(0, colNo, header)
+
+    # write player data
+    for player in playersMap.values():
+        scores = player.gameweekScores
+        firstGwScore = scores[0]
+        secondGwScore = scores[1]
+        thirdGwScore = scores[2]
+        fourthGwScore = scores[3]
+        fifthGwScore = scores[4]
+        avgScore = sum(scores)/len(scores)
+        
+        playerDataList = [row, player.club, player.name, player.position, player.value, player.form, player.minutesPlayed, player.goals, player.assists, player.bonus, player.cleansheets,
+                                      firstGwScore, secondGwScore, thirdGwScore, fourthGwScore, fifthGwScore,avgScore]
+        for colNo, playerStat in playerDataList:
+            worksheet.write(row, colNo, playerStat)
+        row += 1
+    workbook.close() 
+
 def updateDatabaseWithPlayers(playersMap):
+    #TODO: make the database connection comply with RAII pattern
     sqlDatabase.cursor.execute("DROP TABLE PlayerStats")
     sqlDatabase.cursor.execute("CREATE TABLE PlayerStats (\
         PlayerID int NOT NULL PRIMARY KEY,\
@@ -342,8 +384,14 @@ def updateDatabaseWithPlayers(playersMap):
         sqlDatabase.connection.commit()
 
 
+def applyTimeDelay(interval):
+    print("time delay of %d s" % (interval))
+    time.sleep(interval)
+
 def updateGameWeekDifficulty():
     #navigate to statistics Goalkeeper view page
+    applyTimeDelay(5)
+    print("navigating to stats page")
     driver.get(goalKeeperViewStatisticsPageUrl)
     wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, completeStatsGkPageLoadElementFlagSelector)))
     gameWeekDiffcultiesByClubDic = dict()
@@ -359,44 +407,49 @@ def updateGameWeekDifficulty():
     actions = ActionChains(driver) 
     #navigate to first by info button by pressing tab 16 times       
     actions.send_keys(Keys.TAB * 17)
+    print("starting data extraction")
     while noClubsCompleted != noPremierLeagueTeams:
-        driver.save_screenshot("screenshot.png")
-        wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, playerClubSelectorTemplate % (row))))
-        playerClub = driver.find_element_by_css_selector(playerClubSelectorTemplate % (row)).text
-        print ("current club is %s"% (playerClub))
-        #driver.implicitly_wait(3)
-        if playerClub not in gameWeekDiffcultiesByClubDic: # data not extracted for club of current goalie
-            actions.send_keys(Keys.ENTER)
-            actions.perform() #this is the last step in the simulation of clicking the info button
-            wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, nthGameWeekDifficultySelector % (noGWDifficultiesToExtract))))
-            def getGWD(ithWeekAway): return driver.find_element_by_css_selector(nthGameWeekDifficultySelector % (ithWeekAway)).text
-            gameweekDifficultyList = [ getGWD(i) for i in range(1,noGWDifficultiesToExtract+1) ] # starts from 1 not 0, due to css selector nth child syntax
+        try:
+            print("current row is %s"% (row))
+            wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, playerClubSelectorTemplate % (row))))
+            playerClubElem = driver.find_element_by_css_selector(playerClubSelectorTemplate % (row))
+            playerClub = playerClubElem.text
+            print ("current club is %s"% (playerClub))
+            if playerClub not in gameWeekDiffcultiesByClubDic: # data not extracted for club of current goalie
+                print("extracting data for %s"% (playerClub))
+                actions.send_keys(Keys.ENTER)
+                actions.perform() #this is the last step in the simulation of clicking the info button
+                applyTimeDelay(5)
+                wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, nthGameWeekDifficultySelector % (noGWDifficultiesToExtract))))
+                def getGWD(ithWeekAway): return driver.find_element_by_css_selector(nthGameWeekDifficultySelector % (ithWeekAway)).text
+                gameweekDifficultyList = [ getGWD(i) for i in range(1,noGWDifficultiesToExtract+1) ] # starts from 1 not 0, due to css selector nth child syntax
 
-            #store {playerClub, gwdList} as {key, Value}
-            gameWeekDiffcultiesByClubDic[playerClub] = gameweekDifficultyList
-            noClubsCompleted = noClubsCompleted + 1
-            actions.send_keys(Keys.ESCAPE) #close pop-up
-            actions.perform()
-            print("no clubs compl %d" %(noClubsCompleted))
-        #prepare for next player
-        row = row +1        
-        actions.send_keys(Keys.TAB * 2) # move to next row      
-    
+                #store {playerClub, gwdList} as {key, Value}
+                gameWeekDiffcultiesByClubDic[playerClub] = gameweekDifficultyList
+                noClubsCompleted = noClubsCompleted + 1
+                actions.send_keys(Keys.ESCAPE) #close pop-up
+                actions.perform()
+                applyTimeDelay(5)
+                print("no clubs compl %d" %(noClubsCompleted))
+            #prepare for next player
+            row = row +1        
+            actions.send_keys(Keys.TAB * 2) # move to next row    
+            actions.perform()  
+        except Exception:
+            driver.save_screenshot("screenshot.png")
+            raise 
     print(gameWeekDiffcultiesByClubDic)
 
 
 def main():
     password = raw_input('Enter your password: ')
-    login("niranfor1@hotmail.com", password)
+    email = raw_input('Enter your login email address: ')
+    login(email, password)
     status = getStatus()
     playersMap = updatePlayerData(status.gameweekNo)
-    updateDatabaseWithPlayers(playersMap)
-    sqlDatabase.connection.close()
+    updateExcelSheetWithPlayers(playersMap)
+    #sqlDatabase.connection.close()
 
-def testGetGWDtemp():
-    password = raw_input('Enter your password: ')
-    login("niranfor1@hotmail.com", password)
-    updateGameWeekDifficulty()
 if __name__ == '__main__':
-    testGetGWDtemp()#main()
-    driver.quit
+    main()
+    driver.quit()
