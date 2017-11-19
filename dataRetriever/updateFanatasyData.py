@@ -7,7 +7,9 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 
 import time
+import datetime
 import xlsxwriter
+from xlrd import open_workbook
 from customDataStructures import Status
 from customDataStructures import PlayerData
 from pprint import pprint
@@ -71,7 +73,8 @@ cleanSheetsStatisticsPageUrl = "https://fantasy.premierleague.com/a/statistics/c
 goalKeeperViewStatisticsPageUrl = "https://fantasy.premierleague.com/a/statistics/total_points/et_1"
 
 #database
-excelDataBasePath = 'fantasyPlayerData.xlsx'
+excelDataBaseName = 'fantasyPlayerData'
+excelDataBaseExtension = '.xlsx'
 
 def login(username, password):
     # TODO: make sure arguments are strings
@@ -149,7 +152,7 @@ def getStatus():
     wildCardAvailable = False
     if retrievedText[2] == 'Play Wildcard':
         wildCardAvailable = True
-    gameweekNo = int(retrievedText[3][9])
+    gameweekNo = int(retrievedText[3][9:11]) #TODO: make generic so that it works if gameweek is single digit or double digit, could use the expected size of the string to deduce
 
     # use retrieved information to instantiate status object
     result = "noFreeTransfers: %s \nbankBalance GBP: %f \nGameweek number: %s" % (
@@ -290,36 +293,44 @@ def updatePlayerData(gameweekNo):
     updatePlayerScores(playersMap, gameweekNo)
     return playersMap
 
+def getGameWeekDifficulties():
+    print("[INFO] Extracting gameweek difficulties from excel")
+    wb = open_workbook('gameweekDifficulties.xls')
+    sheet = wb.sheets()[0]
+    noRows = sheet.nrows
+    noCols = sheet.ncols
+    gameweekDifficultiesMap = {}
+    print("[INFO] There are %d columns in the sheet" % noCols)
+    for row in range(1,noRows):
+        clubCode = sheet.cell(row,0).value
 
-def updatePlayerScores(playersMap, gameweekNo):
-    print("****updating player scores")  # DEBUG
-    gameweekDifficultyByClubMap = {}
+        #store gameweek difficulties for all clubs in map
+        gameWeekDifficulties = []
+        for col in range(1,noGWDifficultiesToExtract+1):
+            gameWeekDifficulties.append(sheet.cell(row,col).value)
 
-    # query database for gameweek difficulties
-    sqlDatabase.cursor.execute("SELECT Clubs.Name, FIRST_GW, SECOND_GW, THIRD_GW, FOURTH_GW, FIFTH_GW FROM \
-            GameweekDifficulty LEFT JOIN Clubs \
-            ON GameweekDifficulty.ClubId = Clubs.ClubId")
-    row = sqlDatabase.cursor.fetchone()
+        gameweekDifficultiesMap[clubCode] = gameWeekDifficulties
+        row +=1
+    # no need to explicitly call wb.close()
+    return gameweekDifficultiesMap
 
-    # store the gameweek difficulties (for the next 5 matches) for each club in a list
-    while row:
-        gameWeekDifficultiesForClub = row[1:6]
-        gameweekDifficultyByClubMap[str(row[0])] = gameWeekDifficultiesForClub
-        row = sqlDatabase.cursor.fetchone()
-
-     # estimate player scores
+def updatePlayerScores(playersMap, gameweekNo):    
+    gameweekDifficultyByClubMap = getGameWeekDifficulties()
+    print("[INFO] Calculating player scores")
     for key, player in playersMap.items():
         player.getGameweekScoreEstimates(
             gameweekDifficultyByClubMap[player.club], gameweekNo)
 
 
 def updateExcelSheetWithPlayers(playersMap): 
+    now = datetime.datetime.now()
+    fileNameDateTimeSuffix = "_%d_%d_%d_%d_%d_%d"%(now.year,now.month,now.day,now.hour,now.minute,now.second)
+    excelDataBasePath = excelDataBaseName+fileNameDateTimeSuffix+excelDataBaseExtension
     workbook = xlsxwriter.Workbook(excelDataBasePath)
     worksheet = workbook.add_worksheet()
     print("[INFO] Attempting to write player data to excel file named %s" % excelDataBasePath) 
     row = 1
     col = 0
-    id = -1
 
     # create header row
     headers = ['PlayerID','Club','Name','Position','Value','Form','MinutesPlayed','Goals','Assists',
@@ -341,7 +352,7 @@ def updateExcelSheetWithPlayers(playersMap):
         
         playerDataList = [row, player.club, player.name, player.position, player.value, player.form, player.minutesPlayed, player.goals, player.assists, player.bonus, player.cleansheets,
                                       firstGwScore, secondGwScore, thirdGwScore, fourthGwScore, fifthGwScore,avgScore]
-        for colNo, playerStat in playerDataList:
+        for colNo, playerStat in enumerate(playerDataList):
             worksheet.write(row, colNo, playerStat)
         row += 1
     workbook.close() 
@@ -451,5 +462,13 @@ def main():
     #sqlDatabase.connection.close()
 
 if __name__ == '__main__':
-    main()
-    driver.quit()
+    try:
+        main()
+    finally:
+        driver.quit()
+    #TODO:
+    """
+    segregate related functions into modules
+    solve other TODOs
+    comply with python best practices
+    """
