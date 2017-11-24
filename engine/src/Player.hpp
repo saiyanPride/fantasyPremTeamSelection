@@ -33,7 +33,7 @@ struct std::hash<Player>
 
         return hash<const char *>()(player.getName()) ^ hash<Club>()(player.getClub()) ^ hash<float>()(player.getValue());
     }
-    //TODO3: improve this hash functor to guaranteee unique hashcode for each player
+    //TODO(medium priority): improve this hash functor to guaranteee a unique hashcode for each player
 };
 }
 

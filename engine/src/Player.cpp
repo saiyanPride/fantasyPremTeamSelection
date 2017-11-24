@@ -43,5 +43,5 @@ Player::Player(uint8_t _score, Club _club, const char *_name, float _value,Playe
 void Player::display() const{
     std::cout<<"Name"<<name<<std::endl;
     std::cout<<"Value"<<value<<std::endl;
-    //TODO3: print club as well
+    //TODO(low priority): print club as well
 }

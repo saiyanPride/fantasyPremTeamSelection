@@ -8,9 +8,9 @@
 using namespace ProprietaryAlgorithms;
 
 void Team::updateTeam(){
-    // TODO2 query database for current team
-    // TODO2 define startingLineUp, substitutes & captains
-    //each player's members fields must be initialised accurately!
+    // TODO(high priority) query database for current team
+    // TODO(high priority) define startingLineUp, substitutes & captains
+    //each player's object member fields must be initialised accurately!
 };
 
 Team::Team()
@@ -31,12 +31,12 @@ std::shared_ptr<Team::Changes> Team::suggestChanges()
         aChipHasBeenUsed = attemptFreeHit(*this, suggestedChanges);
     if (!aChipHasBeenUsed && Chips::getChips().getNoAvailableFreeTransfers() > 0)
         aChipHasBeenUsed = attemptFreeTransfers(suggestedChanges);
-    /*TODO at this point if suggestedChanges holds a nullptr i.e. none of above operations provided a recommendation
+    /*TODO(high priority) at this point if suggestedChanges holds a nullptr i.e. none of above operations provided a recommendation
     then make suggestedChanges hold the existing team so that decisions on the starting lineup, captaincy as well as the
     benchboost, and triplecaptain chips can be made
     
     if(!aChipHasBeenUsed){//existing team is being retained
-        suggestedChanges.reset(...);//provide constructor that enambles explicit conversion
+        suggestedChanges.reset(...);//provide constructor that enables explicit conversion
         of Team to changes object to facilitate
 
     }
@@ -125,7 +125,8 @@ std::shared_ptr<Team::Changes> Team::getChanges(std::vector<Player> &_newTeam) c
 }
 
 std::vector<Player> Team::getMergedTeamList() const
-{ //TODO3: optimise so that this computation only happens once
+{ //TODO(low priority): optimise so that this computation only happens once
+    //i.e. make mergedTeamList an instance member than can be updated if the team changes
     std::vector<Player> mergedTeamList(startingLineUp);
     mergedTeamList.insert(mergedTeamList.end(), substitutes.begin(), substitutes.end());
     return mergedTeamList;

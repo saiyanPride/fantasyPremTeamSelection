@@ -77,7 +77,7 @@ excelDataBaseName = 'fantasyPlayerData'
 excelDataBaseExtension = '.xlsx'
 
 def login(username, password):
-    # TODO: make sure arguments are strings
+    # TODO (low priority): make sure arguments are strings
     wait.until(EC.presence_of_element_located(
         (By.CSS_SELECTOR, usernameInputElementSelector)))
     # find username field and send keys
