@@ -484,6 +484,22 @@ def main():
     updateDatabaseWithPlayers(playersMap) #updateExcelSheetWithPlayers(playersMap)
     sqlDatabase.connection.close()
 
+def testDB():
+    gameweekDifficultyByClubMap = {}
+
+    # query database for gameweek difficulties
+    sqlDatabase.cursor.execute("SELECT Clubs.Name, FIRST_GW, SECOND_GW, THIRD_GW, FOURTH_GW, FIFTH_GW FROM \
+            GameweekDifficulty LEFT JOIN Clubs \
+            ON GameweekDifficulty.ClubId = Clubs.ClubId")
+    row = sqlDatabase.cursor.fetchone()
+
+    # store the gameweek difficulties (for the next 5 matches) for each club in a list
+    while row:
+        gameWeekDifficultiesForClub = row[1:6]
+        gameweekDifficultyByClubMap[str(row[0])] = gameWeekDifficultiesForClub
+        row = sqlDatabase.cursor.fetchone()
+    print(gameweekDifficultyByClubMap)
+
 if __name__ == '__main__':
     try:
         main()
@@ -491,6 +507,7 @@ if __name__ == '__main__':
         driver.quit()
     #TODO:
     """
+    Improve logging eg. log completion
     segregate related functions into modules
     complete other TODOs
     comply with python best practices
