@@ -14,7 +14,7 @@ from customDataStructures import Status
 from customDataStructures import PlayerData
 from pprint import pprint
 from itertools import izip
-#import sqlDatabase  UNDO
+import sqlDatabase
 
 #driver = webdriver.Firefox(executable_path=r'/Users/NiranPyzzle/Downloads/geckodriver')
 driver = webdriver.PhantomJS(
@@ -182,7 +182,7 @@ def updatePlayerData(gameweekNo):
         'href')[55:]))  # page number starts from the 56th character in url
     lastPage = totalNumberOfPages - 1  # 0 indexed for use in loop
 
-    print("extracting data from minutes played page")  # DEbug
+    print("[INFO] Extracting data from minutes played page")  # DEbug
     # Extract data from statistics/minutes page
     for pageNo in range(totalNumberOfPages):
         if pageNo == lastPage:
@@ -246,12 +246,12 @@ def updatePlayerData(gameweekNo):
     playerDataUpdateFunctions = [updateGoals,
                                  updateAssists, updateBonus, updateCleanSheets]
 
-    print("Extracting data from other pages")  # debug
+    print("[INFO] Extracting data (goals scored, assists, bonus, clean sheets) from relevant pages")  # debug
     # Extract goals scored, assists, bonus, clean sheets
     for pageUrl, playerDataUpdateFunction in izip(pageTypeUrls, playerDataUpdateFunctions):
         driver.get(pageUrl)
         for pageNo in range(totalNumberOfPages):
-            print("*** page %s" % (pageNo))  # DEBUG
+           # print("[DEBUG] page %s" % (pageNo))  # DEBUG
             if pageNo == lastPage:
                 # allow extra time for other rows to load
                 driver.implicitly_wait(
@@ -294,6 +294,7 @@ def updatePlayerData(gameweekNo):
     return playersMap
 
 def getGameWeekDifficulties():
+    #will break if excel file format changes
     print("[INFO] Extracting gameweek difficulties from excel")
     wb = open_workbook('gameweekDifficulties.xls')
     sheet = wb.sheets()[0]
@@ -314,13 +315,35 @@ def getGameWeekDifficulties():
     # no need to explicitly call wb.close()
     return gameweekDifficultiesMap
 
+def updatePlayerScores(playersMap, gameweekNo):
+    print("[INFO]updating player scores")  # DEBUG
+    gameweekDifficultyByClubMap = {}
+
+    # query database for gameweek difficulties
+    sqlDatabase.cursor.execute("SELECT Clubs.Name, FIRST_GW, SECOND_GW, THIRD_GW, FOURTH_GW, FIFTH_GW FROM \
+            GameweekDifficulty LEFT JOIN Clubs \
+            ON GameweekDifficulty.ClubId = Clubs.ClubId")
+    row = sqlDatabase.cursor.fetchone()
+
+    # store the gameweek difficulties (for the next 5 matches) for each club in a list
+    while row:
+        gameWeekDifficultiesForClub = row[1:6]
+        gameweekDifficultyByClubMap[str(row[0])] = gameWeekDifficultiesForClub
+        row = sqlDatabase.cursor.fetchone()
+
+     # estimate player scores
+    for key, player in playersMap.items():
+        player.getGameweekScoreEstimates(
+            gameweekDifficultyByClubMap[player.club], gameweekNo)
+"""
+Excel version
 def updatePlayerScores(playersMap, gameweekNo):    
     gameweekDifficultyByClubMap = getGameWeekDifficulties()
     print("[INFO] Calculating player scores")
     for key, player in playersMap.items():
         player.getGameweekScoreEstimates(
             gameweekDifficultyByClubMap[player.club], gameweekNo)
-
+"""
 
 def updateExcelSheetWithPlayers(playersMap): 
     now = datetime.datetime.now()
@@ -458,8 +481,8 @@ def main():
     login(email, password)
     status = getStatus()
     playersMap = updatePlayerData(status.gameweekNo)
-    updateExcelSheetWithPlayers(playersMap)
-    #sqlDatabase.connection.close()
+    updateDatabaseWithPlayers(playersMap) #updateExcelSheetWithPlayers(playersMap)
+    sqlDatabase.connection.close()
 
 if __name__ == '__main__':
     try:
@@ -469,6 +492,6 @@ if __name__ == '__main__':
     #TODO:
     """
     segregate related functions into modules
-    solve other TODOs
+    complete other TODOs
     comply with python best practices
     """

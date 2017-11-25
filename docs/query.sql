@@ -1,3 +1,10 @@
+#MySQL
+
+CREATE DATABASE fantasyPremierLeague;
+SHOW DATABASES;
+USE fantasyPremierLeague
+
+
 CREATE TABLE Clubs (
 ClubId int NOT NULL PRIMARY KEY,
 Name varchar(255)
@@ -41,27 +48,27 @@ FIFTH_GW TINYINT
 );
 SELECT * FROM GameweekDifficulty;
 
-/*GW7 to gw11*/
-insert into GameweekDifficulty VALUES (0,0, 4,2,4,4,2);
-insert into GameweekDifficulty VALUES (1,1, 2,4,2,4,5);
-insert into GameweekDifficulty VALUES (2,2, 2,2,2,2,2);
-insert into GameweekDifficulty VALUES (3,3, 2,2,4,4,2);
-insert into GameweekDifficulty VALUES (4,4, 4,2,2,2,4);
-insert into GameweekDifficulty VALUES (5,5, 4,4,2,2,4);
-insert into GameweekDifficulty VALUES (6,6, 2,2,4,3,2);
-insert into GameweekDifficulty VALUES (7,7, 1,2,4,2,4);
-insert into GameweekDifficulty VALUES (8,8, 5,2,2,2,4);
-insert into GameweekDifficulty VALUES (9,9, 2,4,2,4,2);
-insert into GameweekDifficulty VALUES (10,10, 4,3,2,2,2);
-insert into GameweekDifficulty VALUES (11,11, 4,2,4,2,3);
-insert into GameweekDifficulty VALUES (12,12, 2,4,4,2,2);
-insert into GameweekDifficulty VALUES (13,13, 2,3,1,2,4);
-insert into GameweekDifficulty VALUES (14,14, 2,3,3,4,2);
-insert into GameweekDifficulty VALUES (15,15, 2,2,2,4,1);
-insert into GameweekDifficulty VALUES (16,16, 2,4,2,2,2);
-insert into GameweekDifficulty VALUES (17,17, 4,3,2,3,2);
-insert into GameweekDifficulty VALUES (18,18, 2,2,2,3,2);
-insert into GameweekDifficulty VALUES (19,19, 2,4,5,2,4);
+/*GW14 to gw18*/
+insert into GameweekDifficulty VALUES (0,0,4,3,2,4,2);
+insert into GameweekDifficulty VALUES (1,1,2,4,5,2,2);
+insert into GameweekDifficulty VALUES (2,2,5,2,4,2,4);
+insert into GameweekDifficulty VALUES (3,3,3,2,2,2,5);
+insert into GameweekDifficulty VALUES (4,4,2,2,2,2,2);
+insert into GameweekDifficulty VALUES (5,5,3,3,3,3,3);
+insert into GameweekDifficulty VALUES (6,6,2,2,4,2,2);
+insert into GameweekDifficulty VALUES (7,7,2,4,2,2,2);
+insert into GameweekDifficulty VALUES (8,8,2,2,4,2,4);
+insert into GameweekDifficulty VALUES (9,9,2,2,2,4,4);
+insert into GameweekDifficulty VALUES (10,10,2,4,2,4,2);
+insert into GameweekDifficulty VALUES (11,11,2,3,2,2,2);
+insert into GameweekDifficulty VALUES (12,12,2,2,2,2,2);
+insert into GameweekDifficulty VALUES (13,13,2,3,5,4,4);
+insert into GameweekDifficulty VALUES (14,14,2,2,2,4,4);
+insert into GameweekDifficulty VALUES (15,15,4,2,2,5,3);
+insert into GameweekDifficulty VALUES (16,16,4,2,4,3,2);
+insert into GameweekDifficulty VALUES (17,17,2,4,2,2,4);
+insert into GameweekDifficulty VALUES (18,18,4,2,2,2,2);
+insert into GameweekDifficulty VALUES (19,19,4,4,3,2,2);
 
 #Query to view gameweek difficulties of clubs
 SELECT Clubs.Name, FIRST_GW, SECOND_GW, THIRD_GW, FOURTH_GW, FIFTH_GW FROM 

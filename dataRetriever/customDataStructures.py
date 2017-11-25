@@ -75,5 +75,4 @@ class PlayerData(object):
         else:
             raise ValueError(
                 '%s has an invalid position: %s' % (self.name, self.position))
-        print ("%s score for next week is: %s " %
-               (self.name, str(self.gameweekScores[0])))
+        #print ("%s score for next week is: %s " %(self.name, str(self.gameweekScores[0])))
