@@ -7,28 +7,36 @@ JsonObject parseStatusJson(std::string myJson){
     size_t jsonSize=myJson.size();
     int currentCharIndex=0;
     int start,end,currentDelimeterInd=0;
-    const char delimeters[4]={'"','"',':',','};
+    const char delimeters[4]={'"','"',':',','};//note the last key/value pair of the JSON terminates with a '}' and not a ',' unlike the other key/value pairs
     std::string key,value;
     JsonObject parsedJson;
 
     while(currentCharIndex < jsonSize && myJson[currentCharIndex] != '}'){ //extract all key value pairs iteratively till end of json string
-        //extract next key
+        /*extract next JSON object {key, value} pair from Json and store in `parsedJson` map in each iteration
+            - To extract the desired data e.g. noFreeTransfers, determine the index of each delimeter in delimeters
+            - then using the indexes extract the relevant substrings from the overall Json string
+        */
             auto getVal = [&](int& resultStore) {
-                while(currentCharIndex < jsonSize && (myJson[currentCharIndex]!= delimeters[currentDelimeterInd] && myJson[currentCharIndex] != '}')) ++currentCharIndex; //determine index of next delimeter
-                if( myJson[currentCharIndex] == delimeters[currentDelimeterInd] || myJson[currentCharIndex] == '}' ) {
+                while(currentCharIndex < jsonSize &&  myJson[currentCharIndex] != '}' && myJson[currentCharIndex]!= delimeters[currentDelimeterInd]) ++currentCharIndex; //determine index of next delimeter
+                
+                if( myJson[currentCharIndex] == delimeters[currentDelimeterInd] || myJson[currentCharIndex] == '}' ) {//above loop terminated because desired delimeter was found
+                    // || myJson[currentCharIndex] == '}' because the last key/value pair of then JSON object terminates with a '}' and not a ',' unlike the other key/value pairs
                     resultStore=currentCharIndex;
                     ++currentDelimeterInd;//next search should be for next delimeter
-                    ++currentCharIndex;//starting position for next delimeter search should be from net character
+                    ++currentCharIndex;//starting position for next delimeter search should be from next character
                 }
                 else throw miscellaneous_exception("json file has syntax error");
             };
 
-            getVal(start);
-            getVal(end);
-            key=myJson.substr(start+1,end-start-1);  
+            getVal(start);//update `start` with the index of the double quote preceding the first char of the desired key
+            getVal(end);//update `end` with the index of the double quote immediately following the last char of the desired key
+            key=myJson.substr(start+1,end-start-1);  //end-start-1 is the no of chars enclosed by double quotes in the JSON
+
+            //extract the corresponding value to `key` similarly
             getVal(start);
             getVal(end);
             value=myJson.substr(start+1,end-start-1);
+
             parsedJson[key]=value;    
             currentDelimeterInd=0;//reset so next iteration searches for next key enclosed by double quotes   
     }
@@ -47,11 +55,12 @@ std::unique_ptr<Chips>& Chips::getChips()
 Chips::Chips()
 {
     update();
+    displayChips();
 }
 
 
 void Chips::update()
-{
+{//TODO(very low priority): switch data source to database
     //open the status json file
     std::ifstream statusFile("../../dataRetriever/status.json"); //attempt to open file
     std::string jsonString;
