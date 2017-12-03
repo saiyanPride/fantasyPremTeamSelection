@@ -35,20 +35,22 @@ SELECT * FROM Clubs;
 
 
 /*Gameweek Difficulty*/
-
 DROP TABLE GameweekDifficulty;
 CREATE TABLE GameweekDifficulty (
 GId int NOT NULL PRIMARY KEY,
-ClubId int NOT NULL FOREIGN KEY REFERENCES Clubs(ClubId),
+ClubId int NOT NULL,
 FIRST_GW TINYINT,
 SECOND_GW TINYINT,
 THIRD_GW TINYINT,
 FOURTH_GW TINYINT,
-FIFTH_GW TINYINT
+FIFTH_GW TINYINT,
+FOREIGN KEY GameweekDifficulty(ClubId)
+REFERENCES Clubs(ClubId)
 );
 SELECT * FROM GameweekDifficulty;
 
-/*GW14 to gw18*/
+/*GW15 to gw19*/
+/*see excel for latest gwd sql commands*/
 insert into GameweekDifficulty VALUES (0,0,4,3,2,4,2);
 insert into GameweekDifficulty VALUES (1,1,2,4,5,2,2);
 insert into GameweekDifficulty VALUES (2,2,5,2,4,2,4);

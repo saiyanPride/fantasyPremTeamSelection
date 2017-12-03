@@ -43,14 +43,16 @@ bool shouldImplementChanges(){
 void implementChanges(std::shared_ptr<Team::Changes> suggestedChanges){
     std::cout<<"implementing changes"<<std::endl;
 };
+
 int main(){
-    Chips::getChips(); //update status of chips
+    std::unique_ptr<Chips>& myChipsPtr = Chips::getChips(); //update status of chips
+    myChipsPtr->displayChips();
     std::cout<<"Have you updated gameweek difficulties in your database?\n enter '0' if you haven't"<<std::endl;
     bool response;
     std::cin>>response;
     if(!response) throw miscellaneous_exception("You need to update gameweek difficulties");
     try{
-        Team myTeam;
+        Team myTeam;//create a Team object with your current team (starting lineup, substitutes etc)
         std::shared_ptr<Team::Changes> suggestedChanges=myTeam.suggestChanges();
         displaySuggestedChanges(suggestedChanges);   
         if(shouldImplementChanges()) implementChanges(suggestedChanges);

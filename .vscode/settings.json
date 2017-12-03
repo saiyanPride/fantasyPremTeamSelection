@@ -23,6 +23,15 @@
         "set": "cpp",
         "string": "cpp",
         "unordered_map": "cpp",
-        "vector": "cpp"
+        "vector": "cpp",
+        "memory": "cpp",
+        "__functional_base": "cpp",
+        "__functional_base_03": "cpp",
+        "future": "cpp",
+        "istream": "cpp",
+        "locale": "cpp",
+        "thread": "cpp",
+        "tuple": "cpp",
+        "utility": "cpp"
     }
 }

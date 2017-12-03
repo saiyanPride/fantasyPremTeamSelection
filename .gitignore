@@ -3,3 +3,4 @@ ProprietaryAlgorithms.cpp
 *.log
 *.txt
 *.hide
+.vscode/*

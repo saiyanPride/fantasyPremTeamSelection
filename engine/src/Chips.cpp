@@ -35,22 +35,20 @@ JsonObject parseStatusJson(std::string myJson){
     return parsedJson;
 }
 
-Chips *Chips::singleton = nullptr;
 
-Chips &Chips::getChips()
+std::unique_ptr<Chips> Chips::myChips(nullptr); //initialise static variable
+
+std::unique_ptr<Chips>& Chips::getChips()
 {
-    if (singleton == nullptr)
-        singleton = new Chips();
-    return *singleton;
+    if (Chips::myChips.get() == nullptr) Chips::myChips.reset(new Chips());
+    return Chips::myChips;
 }
+
 Chips::Chips()
 {
     update();
 }
-Chips::~Chips()
-{
-    if(singleton!=nullptr) delete singleton;
-}
+
 
 void Chips::update()
 {
@@ -101,4 +99,14 @@ bool Chips::doesTripleCaptainExist() const
 bool Chips::doesBenchBoostExist() const
 {
     return benchBoostExists;
+}
+
+void Chips::displayChips() const{
+    auto isChipAvailableStr = [] (bool chip){ return chip ? "Yes":"No";};
+    printf("[Info] Displaying chip status\n[Info] ");
+    printf("{noFreeTransfers: %d}; ",noFreeTransfers);
+    printf("{wildCardExists: %s}; ",isChipAvailableStr(wildCardExists));
+    printf("{freeHitExists: %s}; ",isChipAvailableStr(freeHitExists));
+    printf("{tripleCaptainExists: %s}; ",isChipAvailableStr(tripleCaptainExists));
+    printf("{benchBoostExists: %s};\n",isChipAvailableStr(benchBoostExists));
 }

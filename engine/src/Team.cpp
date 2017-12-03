@@ -21,15 +21,15 @@ Team::Team()
 std::shared_ptr<Team::Changes> Team::suggestChanges()
 { //need to pass gameweeks from main
     bool aChipHasBeenUsed = false;
-
+    std::unique_ptr<Chips>& myChips = Chips::getChips();
     std::shared_ptr<Team::Changes> suggestedChanges(nullptr);
     //determine the best chip to use to effect changes
     determineIfWildCardOrFreeHitShouldBeConsidered(*this);
-    if (shouldConsiderWildCard && Chips::getChips().doesWildCardExist())
+    if (shouldConsiderWildCard && myChips->doesWildCardExist())
         aChipHasBeenUsed = attemptWildCard(*this, suggestedChanges);
-    if (!aChipHasBeenUsed && shouldConsiderFreeHit && Chips::getChips().doesFreeHitExist())
+    if (!aChipHasBeenUsed && shouldConsiderFreeHit && myChips->doesFreeHitExist())
         aChipHasBeenUsed = attemptFreeHit(*this, suggestedChanges);
-    if (!aChipHasBeenUsed && Chips::getChips().getNoAvailableFreeTransfers() > 0)
+    if (!aChipHasBeenUsed && myChips->getNoAvailableFreeTransfers() > 0)
         aChipHasBeenUsed = attemptFreeTransfers(suggestedChanges);
     /*TODO(high priority) at this point if suggestedChanges holds a nullptr i.e. none of above operations provided a recommendation
     then make suggestedChanges hold the existing team so that decisions on the starting lineup, captaincy as well as the

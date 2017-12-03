@@ -7,16 +7,16 @@
     #include <string>
     #include <exception>
     #include <map>
+    #include <memory>
     #include "fantasyExceptions.hpp"
 
     class Chips{//chips are used to make changes to one's team
-        static Chips* singleton;      
+        static std::unique_ptr<Chips> myChips;      
         int8_t noFreeTransfers=0;
         bool wildCardExists=false,freeHitExists=false;
         bool tripleCaptainExists=false, benchBoostExists=false;
 
         Chips();
-        ~Chips();
         void update();
         public:
         int8_t getNoAvailableFreeTransfers() const;
@@ -24,6 +24,7 @@
         bool doesFreeHitExist() const;
         bool doesTripleCaptainExist() const;
         bool doesBenchBoostExist() const;
-        static Chips& getChips();      
+        void displayChips() const;
+        static std::unique_ptr<Chips>& getChips();      
     };//
 #endif
