@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
@@ -28,13 +29,19 @@ minNoPlayerPerPage = 16
 gameweekNo = 0
 noPremierLeagueTeams = 20
 noGWDifficultiesToExtract = 5
+noStartingPlayers = 11
+noSubs = 4
 # css selectors 
 lastPageAnchorElementSelector = '#ismr-main > div > div.paginationContainer.ism-pagination > \
                     a.paginationBtn.ismjs-change-page.ism-pagination__button.ism-pagination__button--secondary'  # it's href attribute has the number of pages href='#17'
+
+#MyTeam page css selectors
 usernameInputElementSelector = "#ismjs-username"
 passwordInputElementSelector = '#ismjs-password'
 benchBoostButtonSelector = '#ismr-chips > ul > li:nth-child(1) > div > button'
 freehitButtonSelector = '#ismr-chips > ul > li:nth-child(2) > div > a > div.ism-button--chip--played__title'# unused freehit selector -> '#ismr-chips > ul > li:nth-child(2) > div > button'
+ithPlayerInCurrentTeamNameSelector = "#ismr-pos%s > div > div > div > span > div > div.ism-element__name"
+ithPlayerInCurrentTeamClubSelector = "#ismr-pos%s > div > div > div > span > div > div.ism-element__data"
 
 
 tripleCaptainButtonSelector = '#ismr-chips > ul > li:nth-child(3) > div > button'
@@ -76,6 +83,10 @@ goalKeeperViewStatisticsPageUrl = "https://fantasy.premierleague.com/a/statistic
 excelDataBaseName = 'fantasyPlayerData'
 excelDataBaseExtension = '.xlsx'
 
+# global data structures
+startingLineup = []
+substitutes = []
+
 def login(username, password):
     # TODO (low priority): make sure arguments are strings
     wait.until(EC.presence_of_element_located(
@@ -90,6 +101,33 @@ def login(username, password):
     elem.send_keys(Keys.RETURN)
 
 
+def updateCurrentTeam():
+    # valiate current page is team url
+    if driver.current_url != myTeamUrl:
+        driver.get(myTeamUrl)
+    #determine starting line up
+
+    def getPlayerDetailsForPlayer(i, resultList):
+        # wait for presence of club & name element selectors
+        playerNameSelector = ithPlayerInCurrentTeamNameSelector % i
+        clubShortNameSelector = ithPlayerInCurrentTeamClubSelector % i
+        wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, playerNameSelector)))
+        wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, playerNameSelector)))       
+
+        # extract name & club
+        playerName = driver.find_element_by_css_selector(playerNameSelector).text
+        clubShortName = driver.find_element_by_css_selector(clubShortNameSelector).text
+        clubShortName = clubShortName[:3]
+
+        resultList.append(playerName+";"+clubShortName)
+
+    for i in range(1,noStartingPlayers+1):
+        getPlayerDetailsForPlayer(i,startingLineup)
+
+    #determine substitutes
+    for i in range(noStartingPlayers+1,noStartingPlayers+noSubs+1):
+        getPlayerDetailsForPlayer(i,substitutes)
+    # TODO: update database with selected players (-1,0,1)-> (not in team, sub, starting)
 def getStatus():
     # expectation is that current page is MyTeam
     chipAvailability = [False, False, False]
@@ -118,6 +156,8 @@ def getStatus():
     chipResult = "benchBoostAvailable:%r \nfreehitAvailable: %r \ntripleCaptainAvailable:%r" % (
         benchBoostAvailable, freehitAvailable, tripleCaptainAvailable)
     print chipResult
+
+
 
     """
     Navigate to transfers page and determine status of 
@@ -474,7 +514,6 @@ def updateGameWeekDifficulty():
             raise 
     print(gameWeekDiffcultiesByClubDic)
 
-
 def main():
     password = raw_input('Enter your password: ')
     email = raw_input('Enter your login email address: ')
@@ -483,6 +522,12 @@ def main():
     playersMap = updatePlayerData(status.gameweekNo)
     updateDatabaseWithPlayers(playersMap) #updateExcelSheetWithPlayers(playersMap)
     sqlDatabase.connection.close()
+
+def test():
+    password = raw_input('Enter your password: ')
+    email = raw_input('Enter your login email address: ')
+    login(email, password)
+    updateCurrentTeam()
 
 def testDB():
     gameweekDifficultyByClubMap = {}
