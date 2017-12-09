@@ -36,13 +36,14 @@ lastPageAnchorElementSelector = '#ismr-main > div > div.paginationContainer.ism-
                     a.paginationBtn.ismjs-change-page.ism-pagination__button.ism-pagination__button--secondary'  # it's href attribute has the number of pages href='#17'
 
 #MyTeam page css selectors
-usernameInputElementSelector = "#ismjs-username"
-passwordInputElementSelector = '#ismjs-password'
+
 benchBoostButtonSelector = '#ismr-chips > ul > li:nth-child(1) > div > button'
 freehitButtonSelector = '#ismr-chips > ul > li:nth-child(2) > div > a > div.ism-button--chip--played__title'# unused freehit selector -> '#ismr-chips > ul > li:nth-child(2) > div > button'
-ithPlayerInCurrentTeamNameSelector = "#ismr-pos%s > div > div > div > span > div > div.ism-element__name"
-ithPlayerInCurrentTeamClubSelector = "#ismr-pos%s > div > div > div > span > div > div.ism-element__data"
-
+ithPlayerInCurrentTeamNameSelector = "#ismr-detail > div > div:nth-child(%d) > div > table > tbody > tr:nth-child(%d) > td.ism-table--el__primary > div > div.ism-media__body.ism-table--el__primary-text > a"
+ithPlayerInCurrentTeamClubShortNameSelector = "#ismr-detail > div > div:nth-child(%d) > div > table > tbody > tr:nth-child(%d) > td.ism-table--el__primary > div > div.ism-media__body.ism-table--el__primary-text > span"
+passwordInputElementSelector = '#ismjs-password'
+listViewButtonSelector = '#ismr-main > div > section:nth-child(5) > div.ism-squad-wrapper > div > ul > li:nth-child(2) > a'
+usernameInputElementSelector = "#ismjs-username"
 
 tripleCaptainButtonSelector = '#ismr-chips > ul > li:nth-child(3) > div > button'
 noFreeTransfersElementSelector = '#ismr-scoreboard > div > div.ism-scoreboard > div:nth-child(4) > div > div'
@@ -84,8 +85,8 @@ excelDataBaseName = 'fantasyPlayerData'
 excelDataBaseExtension = '.xlsx'
 
 # global data structures
-startingLineup = []
-substitutes = []
+startingLineup = [] # elements are of form "<PlayerName>;<Club>"
+substitutes = [] # elements are of form "<PlayerName>;<Club>"
 
 def login(username, password):
     # TODO (low priority): make sure arguments are strings
@@ -102,32 +103,61 @@ def login(username, password):
 
 
 def updateCurrentTeam():
-    # valiate current page is team url
+    """
+    Determine current members of your team, and update the datastore to reflect this
+    """
+    print("[INFO] updating current team")
+    # validate current page is team url
     if driver.current_url != myTeamUrl:
         driver.get(myTeamUrl)
-    #determine starting line up
 
-    def getPlayerDetailsForPlayer(i, resultList):
-        # wait for presence of club & name element selectors
-        playerNameSelector = ithPlayerInCurrentTeamNameSelector % i
-        clubShortNameSelector = ithPlayerInCurrentTeamClubSelector % i
+    #switch to list view so you can select your player's clubs, pitch view only shows the next opposition club for your players
+    wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, listViewButtonSelector)))
+    listViewButton = driver.find_element_by_css_selector(listViewButtonSelector)
+    listViewButton.click()
+
+    
+    def getPlayerDetailsForPlayer(i, resultStore,flag):
+        """
+        Stores the details of the ith player in your team in the provided data structure
+        i: refers to the ith player, and is used to generate the css selector for the ith player's name and club
+        resultStore: data structure where player details will be stored
+        flag: use 1 if player is a starter & 2 if player is a substitute
+        """
+        # wait for presence of player name element selectors
+        playerNameSelector = ithPlayerInCurrentTeamNameSelector % (flag,i)
+        clubNameSelector = ithPlayerInCurrentTeamClubShortNameSelector % (flag,i)
         wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, playerNameSelector)))
-        wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, playerNameSelector)))       
-
-        # extract name & club
+        wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, clubNameSelector)))
+        # extract name
         playerName = driver.find_element_by_css_selector(playerNameSelector).text
-        clubShortName = driver.find_element_by_css_selector(clubShortNameSelector).text
-        clubShortName = clubShortName[:3]
+        clubShortName = driver.find_element_by_css_selector(clubNameSelector).text
+        
+        resultStore.append(playerName+';'+clubShortName)
 
-        resultList.append(playerName+";"+clubShortName)
-
+    print("[INFO] Determining starting lineup")
     for i in range(1,noStartingPlayers+1):
-        getPlayerDetailsForPlayer(i,startingLineup)
+        getPlayerDetailsForPlayer(i,startingLineup,1)
 
-    #determine substitutes
-    for i in range(noStartingPlayers+1,noStartingPlayers+noSubs+1):
-        getPlayerDetailsForPlayer(i,substitutes)
-    # TODO: update database with selected players (-1,0,1)-> (not in team, sub, starting)
+    print("[INFO] Determining substitutes")
+    for i in range(1,noSubs+1):
+        getPlayerDetailsForPlayer(i,substitutes,2)
+
+    addNewColumnSQL = "ALTER TABLE PlayerStats ADD isFirstTeam tinyint DEFAULT 0"
+    sqlDatabase.cursor.execute(addNewColumnSQL)
+    markPlayerAsCurrentlySelectedSQLTemplate = "UPDATE PlayerStats SET isFirstTeam = %d WHERE Name = '%s' AND Club = '%s' "
+
+    def setIsFirstTeamValueInDB(playerList, value):
+        for element in playerList:
+            playerData = element.split(";")
+            sqlStatement = markPlayerAsCurrentlySelectedSQLTemplate % (value,playerData[0], playerData[1])
+            #print("[INFO] executing %s" % sqlStatement)
+            sqlDatabase.cursor.execute(sqlStatement)
+    print("[INFO] Updating database to reflect current members of team")
+    setIsFirstTeamValueInDB(startingLineup,2) # mark first team with flag of 2  
+    setIsFirstTeamValueInDB(substitutes,1) # mark substitutes with flag of 1]
+    sqlDatabase.connection.commit()
+
 def getStatus():
     # expectation is that current page is MyTeam
     chipAvailability = [False, False, False]
@@ -440,9 +470,10 @@ def updateDatabaseWithPlayers(playersMap):
         ThirdGameweekScore float,\
         FourthGameweekScore float,\
         FifthGameweekScore float, \
-        AvgScore float \
+        AvgScore float\
         )")
     id = -1
+    defaultIsFirstTeamValue = 0 # 0 meaning not on team
     for key, player in playersMap.items():
         id += 1
         scores = player.gameweekScores
@@ -521,6 +552,7 @@ def main():
     status = getStatus()
     playersMap = updatePlayerData(status.gameweekNo)
     updateDatabaseWithPlayers(playersMap) #updateExcelSheetWithPlayers(playersMap)
+    updateCurrentTeam()
     sqlDatabase.connection.close()
 
 def test():
@@ -529,25 +561,9 @@ def test():
     login(email, password)
     updateCurrentTeam()
 
-def testDB():
-    gameweekDifficultyByClubMap = {}
-
-    # query database for gameweek difficulties
-    sqlDatabase.cursor.execute("SELECT Clubs.Name, FIRST_GW, SECOND_GW, THIRD_GW, FOURTH_GW, FIFTH_GW FROM \
-            GameweekDifficulty LEFT JOIN Clubs \
-            ON GameweekDifficulty.ClubId = Clubs.ClubId")
-    row = sqlDatabase.cursor.fetchone()
-
-    # store the gameweek difficulties (for the next 5 matches) for each club in a list
-    while row:
-        gameWeekDifficultiesForClub = row[1:6]
-        gameweekDifficultyByClubMap[str(row[0])] = gameWeekDifficultiesForClub
-        row = sqlDatabase.cursor.fetchone()
-    print(gameweekDifficultyByClubMap)
-
 if __name__ == '__main__':
     try:
-        main()
+        main()#test()
     finally:
         driver.quit()
     #TODO:
