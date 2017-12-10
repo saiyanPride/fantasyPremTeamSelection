@@ -2,6 +2,7 @@
 #include <memory>
 #include <iostream>
 #include "Chips.hpp"
+#include "Player.hpp"
 
 void displaySuggestedChanges(std::shared_ptr<Team::Changes> suggestedChanges){
     //indicate whether changes are being recommended
@@ -58,9 +59,12 @@ int main(){
     try{
         verifyGameWeekDifficultyUpdate();
         Team myTeam;//create a Team object with your current team (starting lineup, substitutes etc)
-        std::shared_ptr<Team::Changes> suggestedChanges=myTeam.suggestChanges();
-        displaySuggestedChanges(suggestedChanges);   
-        if(shouldImplementChanges()) implementChanges(suggestedChanges);
+        std::cout<<"printing player details"<<std::endl;//DEBUG 
+        for (auto& player : myTeam.getStartingLineUp()) player.display();
+        
+        //std::shared_ptr<Team::Changes> suggestedChanges=myTeam.suggestChanges();
+        //displaySuggestedChanges(suggestedChanges);   
+        //if(shouldImplementChanges()) implementChanges(suggestedChanges);
     }catch(no_suggestions_exception e){
         std::cout<<e.what()<<std::endl;
     }catch(miscellaneous_exception e){

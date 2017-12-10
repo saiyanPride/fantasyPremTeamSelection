@@ -4,7 +4,7 @@ float Player::getValue() const
     return value;
 };
 
-const char *Player::getName() const
+std::string Player::getName() const
 {
     return name;
 };
@@ -21,27 +21,67 @@ bool Player::operator==(const Player &other) const
 
 bool Player::operator()(const Player &player1, const Player &player2) const
 {
-    return player1.getGameWeekScoreEstimate() > player2.getGameWeekScoreEstimate();
+    return player1.getNextGameWeekScore() > player2.getNextGameWeekScore();
 }
 
-uint8_t Player::getGameWeekScoreEstimate() const
+float Player::getNextGameWeekScore() const
 {
-    return gameWeekScoreEstimate;
+    return nextGameweekScore;
 }
 
 PlayerPostion Player::getPosition() const{
     return position;
 }
 
-Player::Player() {}
 
-Player::Player(uint8_t _score, Club _club, const char *_name, float _value,PlayerPostion _position) 
-    : gameWeekScoreEstimate(_score), club(_club), name(_name), value(_value),position(_position)
+Player::~Player(){
+};
+
+Player::Player(const Player& player)
+    :club(player.club), name(player.name), value(player.value),position(player.position), nextGameweekScore(player.nextGameweekScore), avgFutureScore(player.avgFutureScore)
 {
+    //std::cout<<"copy constructor called for "<<name<<std::endl;//DEBUG
+}
+
+Player::Player(){
+
+}
+
+Player& Player::operator=(const Player& player){
+    if( this != &player){
+        club = player.club;
+        name = player.name;
+        value = player.value;
+        position = player.position;
+        nextGameweekScore = player.nextGameweekScore;
+        avgFutureScore = player.avgFutureScore;
+
+    }
+    
+
+
+    return *this;
+}  
+
+Player::Player(Player&& player){
+    club = player.club;
+    name = player.name;
+    value = player.value;
+    position = player.position;
+    nextGameweekScore = player.nextGameweekScore;
+    avgFutureScore = player.avgFutureScore;
+    //std::cout<<"Move constructor called for "<<name<<std::endl;//DEBUG
+}
+
+Player::Player(Club _club, std::string _name, float _value,PlayerPostion _position,float _nextGameweekScore,float _avgFutureScore) 
+    : club(_club), name(_name), value(_value),position(_position), nextGameweekScore(_nextGameweekScore), avgFutureScore(_avgFutureScore)
+{
+    //std::cout<<"Player constructor called for "<<name<<std::endl;//DEBUG
 }
 
 void Player::display() const{
-    std::cout<<"Name"<<name<<std::endl;
-    std::cout<<"Value"<<value<<std::endl;
+    std::cout<<"{ Name : "<<name<<" }; ";
+    std::cout<<"{ nextGameweekScore : "<<nextGameweekScore<<" }; ";
+    std::cout<<"{ Value : "<<value<<" }; "<<std::endl;
     //TODO(low priority): print club as well
 }

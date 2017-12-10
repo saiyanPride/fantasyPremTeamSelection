@@ -5,6 +5,8 @@
 #include <iostream>
 #include <memory>
 #include "Chips.hpp"
+#include "Player.hpp"
+#include "Settings.hpp"
 #include "mysql_connection.h"
 #include <cppconn/driver.h>
 #include <cppconn/exception.h>
@@ -15,7 +17,30 @@ using namespace ProprietaryAlgorithms;
 
 Team::Team()
 {
+    startingLineUp.reserve(STARTING_LINE_UP_SIZE);//avoid unnecessary calls to copy constructor of Player objects as vector grows during insertion
+    substitutes.reserve(TEAM_SIZE-STARTING_LINE_UP_SIZE);//avoid unnecessary calls to copy constructor of Player objects as vector grows during insertion
     updateTeam();
+};
+
+std::unordered_map<const char*, Club> clubStringToENum{
+    {"ARS",Club::ARSENAL},{"CHE",Club::CHELSEA},{"BOU",Club::BOURNEMOUTH},
+    {"BHA",Club::BRIGHTON},{"BUR",Club::BURNLEY},
+    {"CRY",Club::CRYSTAL_PALACE},{"EVE",Club::EVERTON},
+    {"HUD",Club::HUDDERSFIELD},{"LEI",Club::LEICESTER},
+    {"LIV",Club::LIVERPOOL},{"MUN",Club::MANUTD},
+    {"MCI",Club::MANCHESTER_CITY},{"NEW",Club::NEWCASTLE},
+    {"SOU",Club::SOUTHAMPTON},{"TOT",Club::SPURS},
+    {"STK",Club::STOKE},{"SWA",Club::SWANSEA},
+    {"WAT",Club::WATFORD},{"WBA",Club::WESTBROM},
+    {"WHU",Club::WESTHAM}
+};
+
+std::unordered_map<const char*, PlayerPostion> positionToEnum{
+    {"FWD",PlayerPostion::FORWARD},
+    {"MID",PlayerPostion::MIDFIELDER},
+    {"DEF",PlayerPostion::DEFENDER},
+    {"GKP",PlayerPostion::GOALKEEPER}
+
 };
 
 /*
@@ -24,44 +49,38 @@ Team::Team()
 choices for these roles whether transfers are suggested or not
 */
 void Team::updateTeam(){
-    // TODO(high priority) query database for current team
     //query database for current team players 
     const char *currentPlayersSql = "SELECT Club, Name, Position, FirstGameweekScore, AvgScore FROM PlayerStats WHERE isFirstTeam > 0 ORDER BY AvgScore DESC";
     try {
-        sql::Driver *driver;
-        sql::Connection *con;
-        sql::Statement *stmt;
-        sql::ResultSet *res;
-        std::string password;
-
-        /* Create a connection */
-        driver = get_driver_instance(); 
+        std::string password = "fantasypwd!*!17";
         std::cout<<"[PROMPT] Please enter your database password"<<std::endl;     
-        std::cin>>password;
-        con = driver->connect("tcp://localhost:3306", "fantasydev", password);
-        con->setSchema("fantasyPremierLeague");//USE fantasy database
-        stmt = con->createStatement();
-        res = stmt->executeQuery("SELECT * FROM PlayerStats WHERE isFirstTeam > 0 ORDER BY AvgScore DESC");
-        while (res->next()) {//TODO create player objects and store in appropriate member list based on player being starter/sub
-            //TODO use enums for db column names!!
-            std::cout << res->getString("Club");
-            std::cout << res->getString("Name");
-            std::cout << res->getString("Position");
-            std::cout << res->getDouble("Value") << std::endl;
-        }
-        delete res;
-        delete stmt;
-        delete con;
+        //std::cin>>password;
 
-        } catch (sql::SQLException &e) {
+         /* Connect to & query database for current team */
+        sql::Driver *driver = get_driver_instance();
+        std::unique_ptr<sql::Connection> con(driver->connect("tcp://localhost:3306", "fantasydev", password));
+        con->setSchema("fantasyPremierLeague");//USE fantasy database
+        std::unique_ptr<sql::Statement> stmt(con->createStatement());
+        std::unique_ptr<sql::ResultSet> res(stmt->executeQuery("SELECT * FROM PlayerStats WHERE isFirstTeam > 0 ORDER BY AvgScore DESC"));
+
+        //Instantiate a player object for each player in your current team and store in the starters or substitutes list
+        std::cout<<"[INFO] creating player objects"<<std::endl;//TODO: use a uniform logging function e.g. info(), warn()
+        while (res->next()) {
+            int rankFlag = res->getInt("isFirstTeam");//1-> subs, 2-> starter
+            Club club = clubStringToENum[res->getString("Club").c_str()];
+            std::string name = res->getString("Name");
+            float value = res->getDouble("Value");
+            PlayerPostion position = positionToEnum[ res->getString("Position").c_str() ];          
+            float firstGWScore = res->getDouble("FirstGameweekScore");
+            float avgGWScore = res->getDouble("AvgScore");
+            (rankFlag == 2)? startingLineUp.push_back(Player(club, name, value, position, firstGWScore, avgGWScore )) : substitutes.push_back(Player(club, name, value, position, firstGWScore, avgGWScore ));
+        }
+    } catch (sql::SQLException &e) {
         std::cout << "[ERROR]: SQLException in " << __FILE__;
         std::cout << "[ERROR] " << e.what();
         std::cout << "[ERROR] (MySQL error code: " << e.getErrorCode();
         std::cout << ", SQLState: " << e.getSQLState() << " )" << std::endl;
-        }
-    // TODO(high priority) define startingLineUp, substitutes
-    //instantiate Player objects & group starters separately from substitutes
-    //each player's object member fields must be initialised accurately!
+    }
 };
 
 std::shared_ptr<Team::Changes> Team::suggestChanges()

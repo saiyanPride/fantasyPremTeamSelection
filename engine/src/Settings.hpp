@@ -4,6 +4,9 @@
 #include <cstdint>
 #include <array> 
 
+
+//TODO(low priority): consider making enum have external linkage?
+
 enum class Club
 {
     ARSENAL,
@@ -28,6 +31,7 @@ enum class Club
     WESTHAM
 };
 
+
 enum class TRANSFER_ACTIONS
 {
     BUY,
@@ -42,6 +46,7 @@ enum class PlayerPostion
     GOALKEEPER
 
 };
+
 
 enum MinRequiredPlayersByPostion
 {
