@@ -4,3 +4,4 @@ ProprietaryAlgorithms.cpp
 *.txt
 *.hide
 .vscode/*
+engine/lib/boost

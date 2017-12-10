@@ -5,17 +5,63 @@
 #include <iostream>
 #include <memory>
 #include "Chips.hpp"
+#include "mysql_connection.h"
+#include <cppconn/driver.h>
+#include <cppconn/exception.h>
+#include <cppconn/resultset.h>
+#include <cppconn/statement.h>
 using namespace ProprietaryAlgorithms;
 
-void Team::updateTeam(){
-    // TODO(high priority) query database for current team
-    // TODO(high priority) define startingLineUp, substitutes & captains
-    //each player's object member fields must be initialised accurately!
-};
 
 Team::Team()
 {
     updateTeam();
+};
+
+/*
+- Retrieves current team (starters & substitutes) from datastore and updates corresponding data members
+- Captain & vice captain are intentionally not retrieved, as recommendation algo will suggest best 
+choices for these roles whether transfers are suggested or not
+*/
+void Team::updateTeam(){
+    // TODO(high priority) query database for current team
+    //query database for current team players 
+    const char *currentPlayersSql = "SELECT Club, Name, Position, FirstGameweekScore, AvgScore FROM PlayerStats WHERE isFirstTeam > 0 ORDER BY AvgScore DESC";
+    try {
+        sql::Driver *driver;
+        sql::Connection *con;
+        sql::Statement *stmt;
+        sql::ResultSet *res;
+        std::string password;
+
+        /* Create a connection */
+        driver = get_driver_instance(); 
+        std::cout<<"[PROMPT] Please enter your database password"<<std::endl;     
+        std::cin>>password;
+        con = driver->connect("tcp://localhost:3306", "fantasydev", password);
+        con->setSchema("fantasyPremierLeague");//USE fantasy database
+        stmt = con->createStatement();
+        res = stmt->executeQuery("SELECT * FROM PlayerStats WHERE isFirstTeam > 0 ORDER BY AvgScore DESC");
+        while (res->next()) {//TODO create player objects and store in appropriate member list based on player being starter/sub
+            //TODO use enums for db column names!!
+            std::cout << res->getString("Club");
+            std::cout << res->getString("Name");
+            std::cout << res->getString("Position");
+            std::cout << res->getDouble("Value") << std::endl;
+        }
+        delete res;
+        delete stmt;
+        delete con;
+
+        } catch (sql::SQLException &e) {
+        std::cout << "[ERROR]: SQLException in " << __FILE__;
+        std::cout << "[ERROR] " << e.what();
+        std::cout << "[ERROR] (MySQL error code: " << e.getErrorCode();
+        std::cout << ", SQLState: " << e.getSQLState() << " )" << std::endl;
+        }
+    // TODO(high priority) define startingLineUp, substitutes
+    //instantiate Player objects & group starters separately from substitutes
+    //each player's object member fields must be initialised accurately!
 };
 
 std::shared_ptr<Team::Changes> Team::suggestChanges()
