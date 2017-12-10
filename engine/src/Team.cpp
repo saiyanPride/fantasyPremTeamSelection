@@ -52,9 +52,9 @@ void Team::updateTeam(){
     //query database for current team players 
     const char *currentPlayersSql = "SELECT Club, Name, Position, FirstGameweekScore, AvgScore FROM PlayerStats WHERE isFirstTeam > 0 ORDER BY AvgScore DESC";
     try {
-        std::string password = "fantasypwd!*!17";
+        std::string password;
         std::cout<<"[PROMPT] Please enter your database password"<<std::endl;     
-        //std::cin>>password;
+        std::cin>>password;
 
          /* Connect to & query database for current team */
         sql::Driver *driver = get_driver_instance();

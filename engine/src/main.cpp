@@ -4,33 +4,33 @@
 #include "Chips.hpp"
 #include "Player.hpp"
 
-void displaySuggestedChanges(std::shared_ptr<Team::Changes> suggestedChanges){
+void displaySuggestedActions(std::shared_ptr<Team::Changes> suggestedActions){
     //indicate whether changes are being recommended
-    if (suggestedChanges.get()==nullptr) {
+    if (suggestedActions.get()==nullptr) {
         std::cout<<"No changes are being recommended"<<std::endl;
         return;
     }
     //display players to sell and buy
     std::cout<<"The following players should be sold"<<std::endl;
-    for(auto& playerToSell : suggestedChanges->toSell) playerToSell.display();    
+    for(auto& playerToSell : suggestedActions->toSell) playerToSell.display();    
     std::cout<<"The following players should be bought"<<std::endl;
-    for(auto& playerToBuy : suggestedChanges->toBuy) playerToBuy.display();
+    for(auto& playerToBuy : suggestedActions->toBuy) playerToBuy.display();
     //display starting lineup
     std::cout<<"The following players should start"<<std::endl;
-    for(auto& playerToStart : suggestedChanges->getSuggestedStartingLineUp()) playerToStart.display();
+    for(auto& playerToStart : suggestedActions->getSuggestedStartingLineUp()) playerToStart.display();
     //display captain, triple captain and if triple captain should be used
     std::cout<<std::string("-",20)<<std::endl;
     std::cout<<"Recommended Captain:"<<std::endl;
-    suggestedChanges->getCaptain().display();
+    suggestedActions->getCaptain().display();
     std::cout<<std::string("-",20)<<std::endl;
 
     std::cout<<std::string("-",20)<<std::endl;
     std::cout<<"Recommended Vice Captain:"<<std::endl;
-    suggestedChanges->getViceCaptain().display();
+    suggestedActions->getViceCaptain().display();
     std::cout<<std::string("-",20)<<std::endl;
     //display if other chips should be used
-    std::cout<<"Use Bench Boost: "<<(suggestedChanges->isBenchBoostRecommended())<<std::endl;
-    std::cout<<"Use Triple Captain: "<<(suggestedChanges->isTripleCaptainRecommended())<<std::endl;
+    std::cout<<"Use Bench Boost: "<<(suggestedActions->isBenchBoostRecommended())<<std::endl;
+    std::cout<<"Use Triple Captain: "<<(suggestedActions->isTripleCaptainRecommended())<<std::endl;
 }
 
 bool shouldImplementChanges(){
@@ -41,7 +41,7 @@ bool shouldImplementChanges(){
     return implement;
 }
 
-void implementChanges(std::shared_ptr<Team::Changes> suggestedChanges){
+void implementChanges(std::shared_ptr<Team::Changes> suggestedActions){
     std::cout<<"implementing changes"<<std::endl;
 };
 
@@ -58,13 +58,10 @@ int main(){
     std::cout<<"Have you updated gameweek difficulties in your database?\n enter '0' if you haven't"<<std::endl;
     try{
         verifyGameWeekDifficultyUpdate();
-        Team myTeam;//create a Team object with your current team (starting lineup, substitutes etc)
-        std::cout<<"printing player details"<<std::endl;//DEBUG 
-        for (auto& player : myTeam.getStartingLineUp()) player.display();
-        
-        //std::shared_ptr<Team::Changes> suggestedChanges=myTeam.suggestChanges();
-        //displaySuggestedChanges(suggestedChanges);   
-        //if(shouldImplementChanges()) implementChanges(suggestedChanges);
+        Team myTeam;//create a Team object with your current team (starting lineup, substitutes etc)      
+        std::shared_ptr<Team::Changes> suggestedActions = myTeam.suggestChanges();
+        displaySuggestedActions(suggestedActions);   
+        if(shouldImplementChanges()) implementChanges(suggestedActions);
     }catch(no_suggestions_exception e){
         std::cout<<e.what()<<std::endl;
     }catch(miscellaneous_exception e){
