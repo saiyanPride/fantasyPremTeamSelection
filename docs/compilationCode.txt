@@ -5,3 +5,5 @@ g++ -o testRunner.exe TeamTest.cpp tests-main.cpp  ../src/Team.cpp ../src/Propri
 cd /Users/NiranPyzzle/Documents/softwareProjects/fantasyPremTeamSelection/engine/src
 //TODO: create makefile for build using below
 g++ -std=c++14 -o ../bin/recommendChanges.exe -I/Users/NiranPyzzle/Documents/softwareProjects/fantasyPremTeamSelection/engine/lib/mysql-connector-c++-1.1.7-osx10.10-x86-64bit/include -I/Users/NiranPyzzle/Documents/softwareProjects/fantasyPremTeamSelection/engine/lib/boost/include main.cpp ProprietaryAlgorithms.cpp Team.cpp Settings.cpp Chips.cpp Player.cpp fantasyExceptions.cpp -L/Users/NiranPyzzle/Documents/softwareProjects/fantasyPremTeamSelection/engine/lib/mysql-connector-c++-1.1.7-osx10.10-x86-64bit/lib -lmysqlcppconn
+
+//To execute, need to source engine/bin/prepareEnv.sh

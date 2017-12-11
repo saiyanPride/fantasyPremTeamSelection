@@ -18,6 +18,7 @@ class Player
     std::string getClub() const;
     std::string getName() const;
     float getNextGameWeekScore() const;
+    float getAvgFutureScore() const;
     PlayerPostion getPosition() const;
     Player& operator=(const Player &other);
     bool operator==(const Player &other) const;

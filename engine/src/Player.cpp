@@ -33,6 +33,10 @@ PlayerPostion Player::getPosition() const{
     return position;
 }
 
+float Player::getAvgFutureScore() const{
+    return avgFutureScore;
+}
+
 
 Player::~Player(){
 };
