@@ -9,7 +9,7 @@ std::string Player::getName() const
     return name;
 };
 
-Club Player::getClub() const
+std::string Player::getClub() const
 {
     return club;
 };
@@ -73,15 +73,16 @@ Player::Player(Player&& player){
     //std::cout<<"Move constructor called for "<<name<<std::endl;//DEBUG
 }
 
-Player::Player(Club _club, std::string _name, float _value,PlayerPostion _position,float _nextGameweekScore,float _avgFutureScore) 
+Player::Player(std::string _club, std::string _name, float _value,PlayerPostion _position,float _nextGameweekScore,float _avgFutureScore) 
     : club(_club), name(_name), value(_value),position(_position), nextGameweekScore(_nextGameweekScore), avgFutureScore(_avgFutureScore)
 {
     //std::cout<<"Player constructor called for "<<name<<std::endl;//DEBUG
 }
 
 void Player::display() const{
-    std::cout<<"{ Name : "<<name<<" }; ";
-    std::cout<<"{ nextGameweekScore : "<<nextGameweekScore<<" }; ";
+    std::cout<<"{ Name : "<<name<<" },\t\t";
+    std::cout<<"{ Club : "<<club<<" },\t";
+    std::cout<<"{ AvgScore : "<<avgFutureScore<<" },\t";
+    std::cout<<"{ NextGWScore : "<<nextGameweekScore<<" },\t";
     std::cout<<"{ Value : "<<value<<" }; "<<std::endl;
-    //TODO(low priority): print club as well
 }

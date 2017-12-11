@@ -15,6 +15,8 @@
 using namespace ProprietaryAlgorithms;
 
 
+
+
 Team::Team()
 {
     startingLineUp.reserve(STARTING_LINE_UP_SIZE);//avoid unnecessary calls to copy constructor of Player objects as vector grows during insertion
@@ -22,26 +24,7 @@ Team::Team()
     updateTeam();
 };
 
-std::unordered_map<const char*, Club> clubStringToENum{
-    {"ARS",Club::ARSENAL},{"CHE",Club::CHELSEA},{"BOU",Club::BOURNEMOUTH},
-    {"BHA",Club::BRIGHTON},{"BUR",Club::BURNLEY},
-    {"CRY",Club::CRYSTAL_PALACE},{"EVE",Club::EVERTON},
-    {"HUD",Club::HUDDERSFIELD},{"LEI",Club::LEICESTER},
-    {"LIV",Club::LIVERPOOL},{"MUN",Club::MANUTD},
-    {"MCI",Club::MANCHESTER_CITY},{"NEW",Club::NEWCASTLE},
-    {"SOU",Club::SOUTHAMPTON},{"TOT",Club::SPURS},
-    {"STK",Club::STOKE},{"SWA",Club::SWANSEA},
-    {"WAT",Club::WATFORD},{"WBA",Club::WESTBROM},
-    {"WHU",Club::WESTHAM}
-};
 
-std::unordered_map<const char*, PlayerPostion> positionToEnum{
-    {"FWD",PlayerPostion::FORWARD},
-    {"MID",PlayerPostion::MIDFIELDER},
-    {"DEF",PlayerPostion::DEFENDER},
-    {"GKP",PlayerPostion::GOALKEEPER}
-
-};
 
 /*
 - Retrieves current team (starters & substitutes) from datastore and updates corresponding data members
@@ -52,25 +35,17 @@ void Team::updateTeam(){
     //query database for current team players 
     const char *currentPlayersSql = "SELECT Club, Name, Position, FirstGameweekScore, AvgScore FROM PlayerStats WHERE isFirstTeam > 0 ORDER BY AvgScore DESC";
     try {
-        std::string password;
-        std::cout<<"[PROMPT] Please enter your database password"<<std::endl;     
-        std::cin>>password;
-
-         /* Connect to & query database for current team */
-        sql::Driver *driver = get_driver_instance();
-        std::unique_ptr<sql::Connection> con(driver->connect("tcp://localhost:3306", "fantasydev", password));
-        con->setSchema("fantasyPremierLeague");//USE fantasy database
-        std::unique_ptr<sql::Statement> stmt(con->createStatement());
+        std::unique_ptr<sql::Statement>& stmt = DataRetriever::getDataRetriever().getStatement();
         std::unique_ptr<sql::ResultSet> res(stmt->executeQuery("SELECT * FROM PlayerStats WHERE isFirstTeam > 0 ORDER BY AvgScore DESC"));
-
         //Instantiate a player object for each player in your current team and store in the starters or substitutes list
         std::cout<<"[INFO] creating player objects"<<std::endl;//TODO: use a uniform logging function e.g. info(), warn()
         while (res->next()) {
             int rankFlag = res->getInt("isFirstTeam");//1-> subs, 2-> starter
-            Club club = clubStringToENum[res->getString("Club").c_str()];
+            std::string club = res->getString("Club");
             std::string name = res->getString("Name");
             float value = res->getDouble("Value");
-            PlayerPostion position = positionToEnum[ res->getString("Position").c_str() ];          
+            std::string playerPosition = res->getString("Position");
+            PlayerPostion position = getPositionEnum(playerPosition);        
             float firstGWScore = res->getDouble("FirstGameweekScore");
             float avgGWScore = res->getDouble("AvgScore");
             (rankFlag == 2)? startingLineUp.push_back(Player(club, name, value, position, firstGWScore, avgGWScore )) : substitutes.push_back(Player(club, name, value, position, firstGWScore, avgGWScore ));
@@ -84,9 +59,12 @@ void Team::updateTeam(){
 };
 
 std::shared_ptr<Team::Changes> Team::suggestChanges()
-{ //need to pass gameweeks from main
+{ 
+    //display analytics
+    DataRetriever::getDataRetriever().displayAnalytics(*this);
+    //need to pass gameweeks from main
     bool aChipHasBeenUsed = false;
-    std::unique_ptr<Chips>& myChips = Chips::getChips();
+    std::unique_ptr<Chips>& myChips = Chips::getChips();//TODO: ditch the reference!!!!!
     std::shared_ptr<Team::Changes> suggestedChanges(nullptr);
     //determine the best chip to use to effect changes
     determineIfWildCardOrFreeHitShouldBeConsidered(*this);
@@ -192,8 +170,10 @@ std::shared_ptr<Team::Changes> Team::getChanges(std::vector<Player> &_newTeam) c
 std::vector<Player> Team::getMergedTeamList() const
 { //TODO(low priority): optimise so that this computation only happens once
     //i.e. make mergedTeamList an instance member than can be updated if the team changes
+    //TODO: sort the player objects in descending order of gameweek score
     std::vector<Player> mergedTeamList(startingLineUp);
     mergedTeamList.insert(mergedTeamList.end(), substitutes.begin(), substitutes.end());
+    
     return mergedTeamList;
 }
 
@@ -265,3 +245,4 @@ const bool Team::Changes::isBenchBoostRecommended() const{
 const bool Team::Changes::isTripleCaptainRecommended() const{
     return useTripleCaptain;
 }
+

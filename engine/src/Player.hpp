@@ -4,8 +4,7 @@
 #include "Settings.hpp"
 class Player
 {
-    Club club;
-    std::string name;
+    std::string name,club;
     float value, nextGameweekScore, avgFutureScore;
     PlayerPostion position;
 
@@ -14,9 +13,9 @@ class Player
     Player();
     Player(const Player&);
     Player(Player&&);
-    Player(Club _club, std::string _name, float _value,PlayerPostion _position,float _nextGameweekScore,float _avgFutureScore);
+    Player(std::string _club, std::string _name, float _value,PlayerPostion _position,float _nextGameweekScore,float _avgFutureScore);
     float getValue() const;
-    Club getClub() const;
+    std::string getClub() const;
     std::string getName() const;
     float getNextGameWeekScore() const;
     PlayerPostion getPosition() const;
@@ -34,7 +33,7 @@ struct std::hash<Player>
     {
         using std::hash;
 
-        return hash<std::string>()(player.getName()) ^ hash<Club>()(player.getClub()) ^ hash<float>()(player.getValue());
+        return hash<std::string>()(player.getName()) ^ hash<std::string>()(player.getClub()) ^ hash<float>()(player.getValue());
     }
     //TODO(medium priority): improve this hash functor to guaranteee a unique hashcode for each player
 };

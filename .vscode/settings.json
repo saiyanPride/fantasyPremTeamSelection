@@ -41,6 +41,18 @@
         "limits": "cpp",
         "ratio": "cpp",
         "system_error": "cpp",
-        "type_traits": "cpp"
+        "type_traits": "cpp",
+        "cctype": "cpp",
+        "cstdlib": "cpp",
+        "ctime": "cpp",
+        "cwctype": "cpp",
+        "random": "cpp",
+        "typeindex": "cpp",
+        "regex": "cpp",
+        "*.ipp": "cpp",
+        "unordered_set": "cpp",
+        "forward_list": "cpp",
+        "list": "cpp",
+        "valarray": "cpp"
     }
 }

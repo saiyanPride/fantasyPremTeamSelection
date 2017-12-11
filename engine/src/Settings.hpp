@@ -3,6 +3,7 @@
 #include <unordered_map>
 #include <cstdint>
 #include <array> 
+#include <string> 
 
 
 //TODO(low priority): consider making enum have external linkage?
@@ -73,4 +74,12 @@ extern const float FORWARD_BUDGET;
 extern const float MIDFIELD_BUDGET;
 extern const float DEFENCE_BUDGET;
 extern const float GOALKEEPER_BUDGET;
+
+//club short name to enum mapping
+extern std::unordered_map<const char*, Club> clubStringToEnum;
+//player position to enum mapping
+extern std::unordered_map<const char*, PlayerPostion> positionToEnum;
+
+
+extern PlayerPostion getPositionEnum(std::string& playerPosition);
 #endif
