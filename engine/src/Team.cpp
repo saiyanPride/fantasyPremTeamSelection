@@ -173,12 +173,12 @@ std::vector<Player> Team::getMergedTeamList() const
     //TODO: sort the player objects in descending order of gameweek score
     std::vector<Player> mergedTeamList(startingLineUp);
     mergedTeamList.insert(mergedTeamList.end(), substitutes.begin(), substitutes.end());
+    
     //sort players in merged list by score 
     std::sort(mergedTeamList.begin(), mergedTeamList.end(), 
     [&](const Player & a, const Player & b ){
-            return a.getAvgFutureScore() >= b.getAvgFutureScore();
+            return a.getAvgFutureScore() > b.getAvgFutureScore();
     });
-    
     return mergedTeamList;
 }
 
