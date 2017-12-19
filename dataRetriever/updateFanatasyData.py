@@ -17,6 +17,7 @@ from pprint import pprint
 from itertools import izip
 import sqlDatabase
 
+#TODO: switch to the dataRetriever directory
 #driver = webdriver.Firefox(executable_path=r'/Users/NiranPyzzle/Downloads/geckodriver')
 driver = webdriver.PhantomJS(
     executable_path=r'/Users/NiranPyzzle/Downloads/phantomjs-2.1.1-macosx/bin/phantomjs')
