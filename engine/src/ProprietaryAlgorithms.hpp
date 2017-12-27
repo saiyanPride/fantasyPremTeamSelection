@@ -4,13 +4,6 @@
 #include "Team.hpp"
 #include "Settings.hpp"
 #include "Chips.hpp"
-#include <memory>
-#include <numeric>
-#include <vector>
-#include <stack>
-#include <stdexcept>
-#include <iostream>
-#include <utility>
 #include "fantasyExceptions.hpp"
 #include "mysql_connection.h"
 #include <cppconn/driver.h>
@@ -19,8 +12,15 @@
 #include <cppconn/exception.h>
 #include <cppconn/resultset.h>
 #include <cppconn/statement.h>
-namespace ProprietaryAlgorithms
-{
+#include <memory>
+#include <numeric>
+#include <vector>
+#include <stack>
+#include <stdexcept>
+#include <iostream>
+#include <utility>
+
+namespace FantasyPremTeamSelection{
   void determineIfWildCardOrFreeHitShouldBeConsidered(Team& currentTeam);
   bool attemptWildCard(const Team &currentTeam, std::shared_ptr<Team::Changes>);
   bool attemptFreeHit(const Team &currentTeam, std::shared_ptr<Team::Changes>);
@@ -49,7 +49,7 @@ namespace ProprietaryAlgorithms
       void displayAnalytics(Team&);
       std::unique_ptr<sql::Statement>& getStatement();
   };
-}
+}//!namespace FantasyPremTeamSelection
 #endif
 
 /*

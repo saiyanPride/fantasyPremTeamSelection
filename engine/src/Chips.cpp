@@ -1,8 +1,8 @@
 
 #include "Chips.hpp"
 
+namespace FantasyPremTeamSelection{
 typedef std::map<std::string,std::string> JsonObject;
-using namespace std;
 JsonObject parseStatusJson(std::string myJson){
     size_t jsonSize=myJson.size();
     int currentCharIndex=0;
@@ -119,3 +119,4 @@ void Chips::displayChips() const{
     printf("{tripleCaptainExists: %s}; ",isChipAvailableStr(tripleCaptainExists));
     printf("{benchBoostExists: %s};\n",isChipAvailableStr(benchBoostExists));
 }
+}//!namespace FantasyPremTeamSelection

@@ -5,7 +5,7 @@
 #include <array> 
 #include <string> 
 
-
+namespace FantasyPremTeamSelection{
 //TODO(low priority): consider making enum have external linkage?
 
 enum class Club
@@ -77,4 +77,5 @@ extern const float GOALKEEPER_BUDGET;
 
 
 extern PlayerPostion getPositionEnum(std::string& playerPosition);
+}//!namespace FantasyPremTeamSelection
 #endif

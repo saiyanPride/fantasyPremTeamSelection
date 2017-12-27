@@ -12,11 +12,7 @@
 #include <cppconn/exception.h>
 #include <cppconn/resultset.h>
 #include <cppconn/statement.h>
-using namespace ProprietaryAlgorithms;
-
-
-
-
+namespace FantasyPremTeamSelection{
 Team::Team()
 {
     startingLineUp.reserve(STARTING_LINE_UP_SIZE);//avoid unnecessary calls to copy constructor of Player objects as vector grows during insertion
@@ -250,4 +246,5 @@ const bool Team::Changes::isBenchBoostRecommended() const{
 const bool Team::Changes::isTripleCaptainRecommended() const{
     return useTripleCaptain;
 }
+}//!namespace FantasyPremTeamSelection
 

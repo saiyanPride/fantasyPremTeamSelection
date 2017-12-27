@@ -1,4 +1,5 @@
 #include "fantasyExceptions.hpp"
+namespace FantasyPremTeamSelection{
 const char * insufficient_budget_exception::what() const _NOEXCEPT
 {
     return "impossible to get players with given budget";
@@ -28,5 +29,5 @@ const char * miscellaneous_exception::what() const _NOEXCEPT
 }
 
 miscellaneous_exception::miscellaneous_exception(const char * _msg):msg(_msg){};
-
+}//!namespace FantasyPremTeamSelection
 

@@ -7,6 +7,7 @@
 #include <algorithm>
 #include "Player.hpp"
 #include "fantasyExceptions.hpp"
+namespace FantasyPremTeamSelection{
 class Team{
     
     std::vector<Player> startingLineUp;
@@ -58,7 +59,5 @@ class Team::Changes{
         const bool isBenchBoostRecommended() const;
         const bool isTripleCaptainRecommended() const;
 };
-
-
-
+}//!namespace FantasyPremTeamSelection
 #endif

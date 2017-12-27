@@ -1,4 +1,5 @@
 #include "Player.hpp"
+namespace FantasyPremTeamSelection{
 float Player::getValue() const
 {
     return value;
@@ -90,3 +91,4 @@ void Player::display() const{
     std::cout<<"{ NextGWScore : "<<nextGameweekScore<<" },\t";
     std::cout<<"{ Value : "<<value<<" }; "<<std::endl;
 }
+}//!namespace FantasyPremTeamSelection

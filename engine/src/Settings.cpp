@@ -1,4 +1,5 @@
 #include "Settings.hpp"
+namespace FantasyPremTeamSelection{
 extern const uint8_t NO_FUTURE_GAMEWEEKS_TO_CONSIDER=4;
 extern const uint16_t GAMEWEEK_TEAM_SCORE_THRESHOLD=1050;
 extern const uint8_t BENCH_BOOST_SCORE_THRESHOLD=240;
@@ -31,3 +32,4 @@ PlayerPostion getPositionEnum(std::string& playerPosition){
     }
     return result;
 }
+}//!namespace FantasyPremTeamSelection

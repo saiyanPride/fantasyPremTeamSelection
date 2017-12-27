@@ -4,6 +4,7 @@
 #include "Chips.hpp"
 #include "Player.hpp"
 
+namespace FantasyPremTeamSelection{
 void displaySuggestedActions(std::shared_ptr<Team::Changes> suggestedActions){
     //indicate whether changes are being recommended
     if (suggestedActions.get()==nullptr) {
@@ -52,7 +53,10 @@ void verifyGameWeekDifficultyUpdate(){
     if(!response) throw miscellaneous_exception("[Exception] You need to update gameweek difficulties");
    
 }
+}//! namespace FantasyPremTeamSelection
+
 int main(){
+    using namespace FantasyPremTeamSelection;
     //TODO (low priority) conditionally run the python update script based on user argument
     std::unique_ptr<Chips>& myChipsPtr = Chips::getChips(); //update status of chips
     std::cout<<"Have you updated gameweek difficulties in your database?\n enter '0' if you haven't"<<std::endl;
