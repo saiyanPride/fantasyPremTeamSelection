@@ -2,14 +2,13 @@
 #include "Chips.hpp"
 
 namespace FantasyPremTeamSelection{
-typedef std::map<std::string,std::string> JsonObject;
-JsonObject parseStatusJson(std::string myJson){
+std::map<std::string,std::string> parseStatusJson(std::string myJson){
     size_t jsonSize=myJson.size();
     int currentCharIndex=0;
     int start,end,currentDelimeterInd=0;
     const char delimeters[4]={'"','"',':',','};//note the last key/value pair of the JSON terminates with a '}' and not a ',' unlike the other key/value pairs
     std::string key,value;
-    JsonObject parsedJson;
+    std::map<std::string,std::string> parsedJson;
 
     while(currentCharIndex < jsonSize && myJson[currentCharIndex] != '}'){ //extract all key value pairs iteratively till end of json string
         /*extract next JSON object {key, value} pair from Json and store in `parsedJson` map in each iteration

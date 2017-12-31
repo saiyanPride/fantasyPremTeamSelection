@@ -5,3 +5,4 @@ ProprietaryAlgorithms.cpp
 *.hide
 .vscode/*
 engine/lib/boost
+playground/playground.cpp
