@@ -78,7 +78,7 @@ void Chips::update()
         };
         
         //assign initial values to data members
-        noFreeTransfers=atoi(jsonMap["noFreeTransfersAvailable"].c_str());
+        noFreeTransfers=std::stoi(jsonMap["noFreeTransfersAvailable"]);
         wildCardExists=( removeWhiteSpace(jsonMap["isWildCardAvailable"]).compare("true")==0 ) ? true:false;
         tripleCaptainExists=( removeWhiteSpace(jsonMap["isTripleCaptainAvailable"]).compare("true") ==0 )? true:false;
         freeHitExists=( removeWhiteSpace(jsonMap["isFreehitAvailable"])=="true" )?true:false;     
@@ -111,12 +111,12 @@ bool Chips::doesBenchBoostExist() const
 }
 
 void Chips::displayChips() const{
-    auto isChipAvailableStr = [] (bool chip){ return chip ? "Yes":"No";};
+    auto convertToString = [] (bool chip){ return chip ? "Yes":"No";};
     printf("[Info] Displaying chip status\n[Info] ");
     printf("{noFreeTransfers: %d}; ",noFreeTransfers);
-    printf("{wildCardExists: %s}; ",isChipAvailableStr(wildCardExists));
-    printf("{freeHitExists: %s}; ",isChipAvailableStr(freeHitExists));
-    printf("{tripleCaptainExists: %s}; ",isChipAvailableStr(tripleCaptainExists));
-    printf("{benchBoostExists: %s};\n",isChipAvailableStr(benchBoostExists));
+    printf("{wildCardExists: %s}; ",convertToString(wildCardExists));
+    printf("{freeHitExists: %s}; ",convertToString(freeHitExists));
+    printf("{tripleCaptainExists: %s}; ",convertToString(tripleCaptainExists));
+    printf("{benchBoostExists: %s};\n",convertToString(benchBoostExists));
 }
 }//!namespace FantasyPremTeamSelection

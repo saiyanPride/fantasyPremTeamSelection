@@ -76,6 +76,6 @@ extern const float DEFENCE_BUDGET;
 extern const float GOALKEEPER_BUDGET;
 
 
-extern PlayerPostion getPositionEnum(std::string& playerPosition);
+PlayerPostion getPositionEnum(std::string& playerPosition);
 }//!namespace FantasyPremTeamSelection
 #endif
