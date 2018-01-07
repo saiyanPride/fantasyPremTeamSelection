@@ -20,7 +20,7 @@
 #include <iostream>
 #include <utility>
 
-namespace FantasyPremTeamSelection{
+namespace fantasypremierleague{
   void determineIfWildCardOrFreeHitShouldBeConsidered(Team& currentTeam);
   bool attemptWildCard(const Team &currentTeam, std::shared_ptr<Team::Changes>);
   bool attemptFreeHit(const Team &currentTeam, std::shared_ptr<Team::Changes>);
@@ -49,7 +49,7 @@ namespace FantasyPremTeamSelection{
       void displayAnalytics(Team&);
       std::unique_ptr<sql::Statement>& getStatement();
   };
-}//!namespace FantasyPremTeamSelection
+}//!namespace fantasypremierleague
 #endif
 
 /*

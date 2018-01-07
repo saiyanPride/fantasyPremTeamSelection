@@ -12,7 +12,7 @@
 #include <cppconn/exception.h>
 #include <cppconn/resultset.h>
 #include <cppconn/statement.h>
-namespace FantasyPremTeamSelection{
+namespace fantasypremierleague{
 Team::Team()
 {
     startingLineUp.reserve(STARTING_LINE_UP_SIZE);//avoid unnecessary calls to copy constructor of Player objects as vector grows during insertion
@@ -64,9 +64,9 @@ std::shared_ptr<Team::Changes> Team::suggestChanges()
     std::shared_ptr<Team::Changes> suggestedChanges(nullptr);
     //determine the best chip to use to effect changes
     determineIfWildCardOrFreeHitShouldBeConsidered(*this);
-    if (shouldConsiderWildCard && myChips->doesWildCardExist())
+    if (shouldConsiderWildCard && myChips->doesWildCardChipExist())
         aChipHasBeenUsed = attemptWildCard(*this, suggestedChanges);
-    if (!aChipHasBeenUsed && shouldConsiderFreeHit && myChips->doesFreeHitExist())
+    if (!aChipHasBeenUsed && shouldConsiderFreeHit && myChips->doesFreeHitChipExist())
         aChipHasBeenUsed = attemptFreeHit(*this, suggestedChanges);
     if (!aChipHasBeenUsed && myChips->getNoAvailableFreeTransfers() > 0)
         aChipHasBeenUsed = attemptFreeTransfers(suggestedChanges);
@@ -246,5 +246,5 @@ const bool Team::Changes::isBenchBoostRecommended() const{
 const bool Team::Changes::isTripleCaptainRecommended() const{
     return useTripleCaptain;
 }
-}//!namespace FantasyPremTeamSelection
+}//!namespace fantasypremierleague
 

@@ -1,7 +1,7 @@
 #ifndef FANTASY_EXCEPTIONS
 #define FANTASY_EXCEPTIONS
 #include <exception>
-namespace FantasyPremTeamSelection{
+namespace fantasypremierleague{
 class insufficient_budget_exception : public std::exception
 {
     public:
@@ -35,5 +35,5 @@ class miscellaneous_exception : public std::exception
     miscellaneous_exception(const char * _msg);
     const char *what() const _NOEXCEPT;
 };
-}//!namespace FantasyPremTeamSelection
+}//!namespace fantasypremierleague
 #endif

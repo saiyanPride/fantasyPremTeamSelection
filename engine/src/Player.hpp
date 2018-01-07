@@ -2,7 +2,7 @@
 #define FANTASY_PLAYER
 #include <iostream>
 #include "Settings.hpp"
-namespace FantasyPremTeamSelection{
+namespace fantasypremierleague{
 class Player
 {
     std::string name,club;
@@ -26,12 +26,12 @@ class Player
     bool operator()(const Player &player1, const Player &player2) const;//functor used for comparisons
     void display() const;
 };
-}//!namespace FantasyPremTeamSelection
+}//!namespace fantasypremierleague
 
 template <>
-struct std::hash<FantasyPremTeamSelection::Player>
+struct std::hash<fantasypremierleague::Player>
 {
-    std::size_t operator()(const FantasyPremTeamSelection::Player &player) const
+    std::size_t operator()(const fantasypremierleague::Player &player) const
     {
         using std::hash;
 
