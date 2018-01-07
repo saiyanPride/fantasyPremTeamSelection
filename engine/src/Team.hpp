@@ -17,18 +17,18 @@ class Team{
     uint8_t gameweekNo;
     
     public:
-    class Changes;
-    Team();
-    std::shared_ptr<Changes> suggestChanges();
-    void updateTeam();
-    const std::vector<Player>& getStartingLineUp() const;
-    const std::vector<Player>& getSubstitutes() const;
-    uint8_t getGameWeekNo() const;
-    void setShouldConsiderWildcard(bool);
-    void setShouldConsiderFreeHit(bool);
-    void setCaptains(std::shared_ptr<Player> _captain,std::shared_ptr<Player> _viceCaptain);
-    std::shared_ptr<Changes> getChanges(std::vector<Player>& _newTeam) const;
-    std::vector<Player> getMergedTeamList() const;
+     class Changes;
+     Team();
+     std::shared_ptr<Changes> suggestChanges();
+     void updateTeam();
+     const std::vector<Player>& getStartingLineUp() const;
+     const std::vector<Player>& getSubstitutes() const;
+     uint8_t getGameWeekNo() const;
+     void setShouldConsiderWildcard(bool);
+     void setShouldConsiderFreeHit(bool);
+     void setCaptains(std::shared_ptr<Player> _captain,std::shared_ptr<Player> _viceCaptain);
+     std::shared_ptr<Changes> getChanges(std::vector<Player>& _newTeam) const;
+     std::vector<Player> getMergedTeamList() const;
 };
 
 class Team::Changes{

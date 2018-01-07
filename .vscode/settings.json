@@ -57,6 +57,8 @@
         "queue": "cpp",
         "stack": "cpp",
         "hash_map": "cpp",
-        "hash_set": "cpp"
+        "hash_set": "cpp",
+        "__tuple": "cpp",
+        "cmath": "cpp"
     }
 }
