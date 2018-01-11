@@ -9,7 +9,7 @@ int main()
 {
     using namespace fantasypremierleague;
     //TODO (low priority) conditionally update databse with player analytics based on user argument
-    std::unique_ptr<Chips> &myChipsPtr = Chips::getChips();
+    std::shared_ptr<Chips> myChipsPtr = Chips::getChips();
     try
     {
         verifyGameWeekDifficultyUpdate();

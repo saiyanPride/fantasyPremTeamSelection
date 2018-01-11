@@ -20,7 +20,7 @@ namespace fantasypremierleague
 // The `Chips` class stores data pertaining to the availability of chips to the user
 class Chips
 {
-    static std::unique_ptr<Chips> myChips; //singleton
+    static std::shared_ptr<Chips> myChips; //singleton
     int8_t noFreeTransfers = 0;
     bool wildCardExists = false, freeHitExists = false, tripleCaptainExists = false, benchBoostExists = false;
 
@@ -34,7 +34,7 @@ class Chips
     bool doesTripleCaptainChipExist() const;
     bool doesBenchBoostChipExist() const;
     void displayChips() const;
-    static std::unique_ptr<Chips> &getChips(); //returns the singleton Chips obect
+    static std::shared_ptr<Chips> &getChips(); //returns the singleton Chips obect
 };
 } //!namespace fantasypremierleague
 #endif

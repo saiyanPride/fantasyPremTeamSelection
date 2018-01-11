@@ -25,9 +25,9 @@ bool Chips::doesBenchBoostChipExist() const
     return benchBoostExists;
 }
 
-std::unique_ptr<Chips> Chips::myChips(nullptr); //initialise static variable
+std::shared_ptr<Chips> Chips::myChips(nullptr); //initialise static variable
 
-std::unique_ptr<Chips> &Chips::getChips()
+std::shared_ptr<Chips> &Chips::getChips()
 {
     if (Chips::myChips.get() == nullptr)
         Chips::myChips.reset(new Chips());

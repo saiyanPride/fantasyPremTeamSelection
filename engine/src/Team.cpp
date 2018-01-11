@@ -30,7 +30,7 @@ void Team::updateTeam()
     const char *currentPlayersSql = "SELECT Club, Name, Position, FirstGameweekScore, AvgScore FROM PlayerStats WHERE isFirstTeam > 0 ORDER BY AvgScore DESC";
     try
     {
-        std::unique_ptr<sql::Statement> stmt (std::move(DataRetriever::getDataRetriever().getStatement()));
+        std::shared_ptr<sql::Statement> stmt(DataRetriever::getDataRetriever().getStatement());
         std::unique_ptr<sql::ResultSet> res(stmt->executeQuery("SELECT * FROM PlayerStats WHERE isFirstTeam > 0 ORDER BY AvgScore DESC"));
         //Instantiate a player object for each player in your current team and store in the starters or substitutes list
         std::cout << "[INFO] creating player objects" << std::endl; //TODO: use a uniform logging function e.g. info(), warn()
@@ -58,20 +58,19 @@ void Team::updateTeam()
 
 std::shared_ptr<Team::Changes> Team::suggestChanges()
 {
-    //display analytics
+    // display analytics
     DataRetriever::getDataRetriever().displayAnalytics(*this);
-    //need to pass gameweeks from main
+    // determine if any chips should be used
     bool aChipHasBeenUsed = false;
-    std::unique_ptr<Chips> &myChips = Chips::getChips(); //TODO: ditch the reference!!!!!
+    std::shared_ptr<Chips> myChips = Chips::getChips();
     std::shared_ptr<Team::Changes> suggestedChanges(nullptr);
-    //determine the best chip to use to effect changes
     determineIfWildCardOrFreeHitShouldBeConsidered(*this);
     if (shouldConsiderWildCard && myChips->doesWildCardChipExist())
-        aChipHasBeenUsed = attemptWildCard(*this, suggestedChanges);
+        aChipHasBeenUsed = improvedTeamFoundWithWildCard(*this, suggestedChanges);
     if (!aChipHasBeenUsed && shouldConsiderFreeHit && myChips->doesFreeHitChipExist())
-        aChipHasBeenUsed = attemptFreeHit(*this, suggestedChanges);
+        aChipHasBeenUsed = improvedTeamFoundWithFreeHit(*this, suggestedChanges);
     if (!aChipHasBeenUsed && myChips->getNoAvailableFreeTransfers() > 0)
-        aChipHasBeenUsed = attemptFreeTransfers(suggestedChanges);
+        aChipHasBeenUsed = improvedTeamFoundWithFreeTransfers(suggestedChanges);
     /*TODO(high priority) at this point if suggestedChanges holds a nullptr i.e. none of above operations provided a recommendation
     then make suggestedChanges hold the existing team so that decisions on the starting lineup, captaincy as well as the
     benchboost, and triplecaptain chips can be made
@@ -83,12 +82,10 @@ std::shared_ptr<Team::Changes> Team::suggestChanges()
     }
     */
     setStartingLineUp(suggestedChanges);
-    attemptBenchBoost(suggestedChanges);
-    attemptTripleCaptain(suggestedChanges);
+    recommendBenchBoostIfWorthwhile(suggestedChanges);
+    recommendTripleCaptainIfWorthwhile(suggestedChanges);
     if (suggestedChanges.get() == nullptr)
-    {
         throw no_suggestions_exception();
-    }
     return suggestedChanges;
 };
 
@@ -115,49 +112,45 @@ void Team::setCaptains(const std::shared_ptr<Player> &_captain, const std::share
     captain = _captain;
     viceCaptain = _viceCaptain;
 }
-uint8_t Team::getGameWeekNo() const
+uint8_t Team::getGameWeekNum() const
 {
-    return gameweekNo;
+    return gameweekNum;
 }
 
-std::shared_ptr<Team::Changes> Team::getChanges(std::vector<Player> &newTeam) const
+std::shared_ptr<Team::Changes> Team::getChangesRequiredToFormNewTeam(std::vector<Player> &newTeam) const
 {
     std::vector<Player> toSell;
     std::vector<Player> toBuy;
 
-    //players in both current and new team are retained, those just in current team should be sold and those just in the new team should be bought
-    //create hashtable of current team's players to track their frequency in current and new team lists
-    std::unordered_map<Player, uint8_t> frequencyOfPlayersInCurrentTeam;
+    // players in both current and `newTeam` are retained i.e. do not count towards changes
+    // players exclusively in the current team should be sold and those exclusively in the new team should be bought
+    std::unordered_map<Player, uint8_t> frequencyOfPlayersInCurrentTeam; // track frequency of current players in both the current and new team lists
     for (auto currentPlayer : startingLineUp)
         frequencyOfPlayersInCurrentTeam.insert(std::make_pair(currentPlayer, 1));
     for (auto currentPlayer : substitutes)
         frequencyOfPlayersInCurrentTeam.insert(std::make_pair(currentPlayer, 1));
-    /*traverse list of new teams and for each player in new list, check for hit in frequencyOfPlayersInCurrentTeam
-        //if hit, then team member should be retained
-        //else, then the team member is new (should be bought)
-    */
 
-    //determine players that need to sold and bought
+    //determine players that are exclusive to either the current team or `newTeam` i.e. players that should be bought and sold
     for (auto newPlayer : newTeam)
     {
         if (frequencyOfPlayersInCurrentTeam.find(newPlayer) != frequencyOfPlayersInCurrentTeam.end())
-        {                                                    //hit so player retained
-            frequencyOfPlayersInCurrentTeam[newPlayer] += 1; //update frequency of retained player to enable distinction between current players that will be sold
+        {                                                    // player exists in both lists so player is retained
+            frequencyOfPlayersInCurrentTeam[newPlayer] += 1; // update frequency of retained player to enable distinction between current players that will be sold
         }
         else
-        { //miss, so player needs to be bought
+        { // player exclusive to `newTeam` so player needs to be bought
             toBuy.push_back(newPlayer);
         }
     }
 
-    //traverse frequencyOfPlayersInCurrentTeam to determine players to sell
+    // determine players to sell
     for (auto playerFrequencyPair : frequencyOfPlayersInCurrentTeam)
-    { //players in current team with frequency of 1 should be sold
+    { // players in current team with frequency of 1 should be sold
         if (playerFrequencyPair.second == 1)
             toSell.push_back(playerFrequencyPair.first);
     }
 
-    //players sold must match players bought
+    // number of players to sell must match players to buy
     if (toSell.size() != toBuy.size())
         throw transfer_imbalance_exception();
 
@@ -166,13 +159,12 @@ std::shared_ptr<Team::Changes> Team::getChanges(std::vector<Player> &newTeam) co
 }
 
 std::vector<Player> Team::getMergedTeamList() const
-{ //TODO(low priority): optimise so that this computation only happens one time maximum
-    //i.e. make mergedTeamList an instance member than can be updated if the team changes
-    //TODO: sort the player objects in descending order of gameweek score
+{ // TODO(low priority): optimise so that this computation only happens at most once
+
     std::vector<Player> mergedTeamList(startingLineUp);
     mergedTeamList.insert(mergedTeamList.end(), substitutes.begin(), substitutes.end());
 
-    //sort players in merged list by score
+    // sort players in merged list by score (descending order)
     std::sort(mergedTeamList.begin(), mergedTeamList.end(),
               [&](const Player &a, const Player &b) {
                   return a.getAvgFutureScore() > b.getAvgFutureScore();
@@ -218,9 +210,13 @@ std::size_t Team::Changes::getNumChanges() const
 Player Team::Changes::getCaptain()
 {
     if (captain != nullptr)
+    {
         return *captain;
+    }
     else
+    {
         throw miscellaneous_exception("You don't have a captain");
+    }
 }
 
 Player Team::Changes::getViceCaptain()
