@@ -2,31 +2,32 @@
 #define FANTASY_PLAYER
 #include <iostream>
 #include "Settings.hpp"
-namespace fantasypremierleague{
+namespace fantasypremierleague
+{
 class Player
 {
-    std::string name,club;
+    std::string name, club;
     float value, nextGameweekScore, avgFutureScore;
     PlayerPostion position;
 
   public:
     ~Player();
     Player();
-    Player(const Player&);
-    Player(Player&&);
-    Player(std::string _club, std::string _name, float _value,PlayerPostion _position,float _nextGameweekScore,float _avgFutureScore);
+    Player(const Player &);
+    Player(Player &&);
+    Player(const std::string &_club, const std::string &_name, float _value, const PlayerPostion &_position, float _nextGameweekScore, float _avgFutureScore);
     float getValue() const;
-    std::string getClub() const;
-    std::string getName() const;
+    const std::string &getClub() const;
+    const std::string &getName() const;
     float getNextGameWeekScore() const;
     float getAvgFutureScore() const;
-    PlayerPostion getPosition() const;
-    Player& operator=(const Player &other);
+    const PlayerPostion &getPosition() const;
+    Player &operator=(const Player &other);
     bool operator==(const Player &other) const;
-    bool operator()(const Player &player1, const Player &player2) const;//functor used for comparisons
+    bool operator()(const Player &player1, const Player &player2) const; // returns true if player1 has a greater estimated next gameweek score than player2
     void display() const;
 };
-}//!namespace fantasypremierleague
+} //!namespace fantasypremierleague
 
 template <>
 struct std::hash<fantasypremierleague::Player>
@@ -37,6 +38,5 @@ struct std::hash<fantasypremierleague::Player>
 
         return hash<std::string>()(player.getName()) ^ hash<std::string>()(player.getClub()) ^ hash<float>()(player.getValue());
     }
-    //TODO(medium priority): improve this hash functor to guaranteee a unique hashcode for each player
 };
 #endif

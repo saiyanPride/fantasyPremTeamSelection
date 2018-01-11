@@ -95,12 +95,13 @@ void Chips::update()
         statusFile.close();
         auto statusHashTable = parseStatusJson(jsonString);
 
-        auto removeWhiteSpace = [](std::string& word) {
-            word.erase(std::remove_if(word.begin(),word.end(), [](const char& character){return character == ' ';}),
-               word.end());
+        auto removeWhiteSpace = [](std::string &word) {
+            word.erase(std::remove_if(word.begin(), word.end(), [](const char &character) { return character == ' '; }),
+                       word.end());
         };
 
-        for (auto& statusEntry : statusHashTable) removeWhiteSpace(statusEntry.second);
+        for (auto &statusEntry : statusHashTable)
+            removeWhiteSpace(statusEntry.second);
 
         //set status of chips
         noFreeTransfers = std::stoi(statusHashTable["noFreeTransfersAvailable"]);

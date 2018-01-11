@@ -1,52 +1,54 @@
-#include "Team.hpp"
-#include "ProprietaryAlgorithms.hpp"
 #include <vector>
 #include <exception>
 #include <iostream>
 #include <memory>
-#include "Chips.hpp"
-#include "Player.hpp"
-#include "Settings.hpp"
-#include "mysql_connection.h"
 #include <cppconn/driver.h>
 #include <cppconn/exception.h>
 #include <cppconn/resultset.h>
 #include <cppconn/statement.h>
-namespace fantasypremierleague{
+#include "Chips.hpp"
+#include "Player.hpp"
+#include "Settings.hpp"
+#include "mysql_connection.h"
+#include "Team.hpp"
+#include "ProprietaryAlgorithms.hpp"
+namespace fantasypremierleague
+{
+
 Team::Team()
 {
-    startingLineUp.reserve(STARTING_LINE_UP_SIZE);//avoid unnecessary calls to copy constructor of Player objects as vector grows during insertion
-    substitutes.reserve(TEAM_SIZE-STARTING_LINE_UP_SIZE);//avoid unnecessary calls to copy constructor of Player objects as vector grows during insertion
+    startingLineUp.reserve(STARTING_LINE_UP_SIZE);
+    substitutes.reserve(TEAM_SIZE - STARTING_LINE_UP_SIZE);
     updateTeam();
 };
 
-
-
-/*
-- Retrieves current team (starters & substitutes) from datastore and updates corresponding data members
-- Captain & vice captain are intentionally not retrieved, as recommendation algo will suggest best 
-choices for these roles whether transfers are suggested or not
-*/
-void Team::updateTeam(){
-    //query database for current team players 
+// Retrieves current team (starting lineup & substitutes) from data source and updates corresponding data members
+// Captain & Vice Captain are intentionally not retrieved, as recommendation algo will suggest best choices for these roles whether transfers are suggested or not
+void Team::updateTeam()
+{
+    //query database for current team players
     const char *currentPlayersSql = "SELECT Club, Name, Position, FirstGameweekScore, AvgScore FROM PlayerStats WHERE isFirstTeam > 0 ORDER BY AvgScore DESC";
-    try {
-        std::unique_ptr<sql::Statement>& stmt = DataRetriever::getDataRetriever().getStatement();
+    try
+    {
+        std::unique_ptr<sql::Statement> stmt (std::move(DataRetriever::getDataRetriever().getStatement()));
         std::unique_ptr<sql::ResultSet> res(stmt->executeQuery("SELECT * FROM PlayerStats WHERE isFirstTeam > 0 ORDER BY AvgScore DESC"));
         //Instantiate a player object for each player in your current team and store in the starters or substitutes list
-        std::cout<<"[INFO] creating player objects"<<std::endl;//TODO: use a uniform logging function e.g. info(), warn()
-        while (res->next()) {
-            int rankFlag = res->getInt("isFirstTeam");//1-> subs, 2-> starter
+        std::cout << "[INFO] creating player objects" << std::endl; //TODO: use a uniform logging function e.g. info(), warn()
+        while (res->next())
+        {
+            int rankFlag = res->getInt("isFirstTeam"); //1-> subs, 2-> starter
             std::string club = res->getString("Club");
             std::string name = res->getString("Name");
             float value = res->getDouble("Value");
             std::string playerPosition = res->getString("Position");
-            PlayerPostion position = getPositionEnum(playerPosition);        
+            PlayerPostion position = getPositionEnum(playerPosition);
             float firstGWScore = res->getDouble("FirstGameweekScore");
             float avgGWScore = res->getDouble("AvgScore");
-            (rankFlag == 2)? startingLineUp.push_back(Player(club, name, value, position, firstGWScore, avgGWScore )) : substitutes.push_back(Player(club, name, value, position, firstGWScore, avgGWScore ));
+            (rankFlag == 2) ? startingLineUp.push_back(Player(club, name, value, position, firstGWScore, avgGWScore)) : substitutes.push_back(Player(club, name, value, position, firstGWScore, avgGWScore));
         }
-    } catch (sql::SQLException &e) {
+    }
+    catch (sql::SQLException &e)
+    {
         std::cout << "[ERROR]: SQLException in " << __FILE__;
         std::cout << "[ERROR] " << e.what();
         std::cout << "[ERROR] (MySQL error code: " << e.getErrorCode();
@@ -55,12 +57,12 @@ void Team::updateTeam(){
 };
 
 std::shared_ptr<Team::Changes> Team::suggestChanges()
-{ 
+{
     //display analytics
     DataRetriever::getDataRetriever().displayAnalytics(*this);
     //need to pass gameweeks from main
     bool aChipHasBeenUsed = false;
-    std::unique_ptr<Chips>& myChips = Chips::getChips();//TODO: ditch the reference!!!!!
+    std::unique_ptr<Chips> &myChips = Chips::getChips(); //TODO: ditch the reference!!!!!
     std::shared_ptr<Team::Changes> suggestedChanges(nullptr);
     //determine the best chip to use to effect changes
     determineIfWildCardOrFreeHitShouldBeConsidered(*this);
@@ -108,7 +110,7 @@ void Team::setShouldConsiderFreeHit(bool value)
     shouldConsiderFreeHit = value;
 }
 
-void Team::setCaptains(std::shared_ptr<Player> _captain, std::shared_ptr<Player> _viceCaptain)
+void Team::setCaptains(const std::shared_ptr<Player> &_captain, const std::shared_ptr<Player> &_viceCaptain)
 {
     captain = _captain;
     viceCaptain = _viceCaptain;
@@ -118,7 +120,7 @@ uint8_t Team::getGameWeekNo() const
     return gameweekNo;
 }
 
-std::shared_ptr<Team::Changes> Team::getChanges(std::vector<Player> &_newTeam) const
+std::shared_ptr<Team::Changes> Team::getChanges(std::vector<Player> &newTeam) const
 {
     std::vector<Player> toSell;
     std::vector<Player> toBuy;
@@ -136,7 +138,7 @@ std::shared_ptr<Team::Changes> Team::getChanges(std::vector<Player> &_newTeam) c
     */
 
     //determine players that need to sold and bought
-    for (auto newPlayer : _newTeam)
+    for (auto newPlayer : newTeam)
     {
         if (frequencyOfPlayersInCurrentTeam.find(newPlayer) != frequencyOfPlayersInCurrentTeam.end())
         {                                                    //hit so player retained
@@ -159,22 +161,22 @@ std::shared_ptr<Team::Changes> Team::getChanges(std::vector<Player> &_newTeam) c
     if (toSell.size() != toBuy.size())
         throw transfer_imbalance_exception();
 
-    std::shared_ptr<Changes> changes(new Changes(toSell, toBuy, _newTeam));
+    std::shared_ptr<Changes> changes(new Changes(toSell, toBuy, newTeam));
     return changes;
 }
 
 std::vector<Player> Team::getMergedTeamList() const
-{ //TODO(low priority): optimise so that this computation only happens once
+{ //TODO(low priority): optimise so that this computation only happens one time maximum
     //i.e. make mergedTeamList an instance member than can be updated if the team changes
     //TODO: sort the player objects in descending order of gameweek score
     std::vector<Player> mergedTeamList(startingLineUp);
     mergedTeamList.insert(mergedTeamList.end(), substitutes.begin(), substitutes.end());
-    
-    //sort players in merged list by score 
-    std::sort(mergedTeamList.begin(), mergedTeamList.end(), 
-    [&](const Player & a, const Player & b ){
-            return a.getAvgFutureScore() > b.getAvgFutureScore();
-    });
+
+    //sort players in merged list by score
+    std::sort(mergedTeamList.begin(), mergedTeamList.end(),
+              [&](const Player &a, const Player &b) {
+                  return a.getAvgFutureScore() > b.getAvgFutureScore();
+              });
     return mergedTeamList;
 }
 
@@ -191,7 +193,7 @@ void Team::Changes::setCaptains()
 {
     if (suggestedStartingLineUp.size() != STARTING_LINE_UP_SIZE)
     {
-        throw starting_lineup_size_exception("In order to reccomend captain and vice captain, the starting line up selection must be complete");
+        throw starting_lineup_size_exception("In order to recommend captain and vice captain, the starting line up selection must be complete");
     }
     captain = &suggestedStartingLineUp[0];     //player with highest score
     viceCaptain = &suggestedStartingLineUp[1]; //player with second highest score
@@ -205,7 +207,7 @@ Team::Changes::~Changes()
         delete viceCaptain;
 }
 
-std::size_t Team::Changes::getNoChanges() const
+std::size_t Team::Changes::getNumChanges() const
 {
     if (toSell.size() == toBuy.size())
         return toSell.size();
@@ -215,36 +217,44 @@ std::size_t Team::Changes::getNoChanges() const
 
 Player Team::Changes::getCaptain()
 {
-    if (captain!=nullptr) return *captain;
-    else throw miscellaneous_exception("You don't have a captain");
+    if (captain != nullptr)
+        return *captain;
+    else
+        throw miscellaneous_exception("You don't have a captain");
 }
 
 Player Team::Changes::getViceCaptain()
 {
-    if (viceCaptain!=nullptr) return *viceCaptain;
-    else throw miscellaneous_exception("You don't have a vice captain");
+    if (viceCaptain != nullptr)
+        return *viceCaptain;
+    else
+        throw miscellaneous_exception("You don't have a vice captain");
 }
-std::vector<Player> Team::Changes::getSuggestedSubstitutes()
+std::vector<Player> &Team::Changes::getSuggestedSubstitutes()
 {
     return suggestedSubstitutes;
 }
-std::vector<Player> Team::Changes::getSuggestedStartingLineUp(){
+std::vector<Player> &Team::Changes::getSuggestedStartingLineUp()
+{
     return suggestedStartingLineUp;
 }
 
-void Team::Changes::recommendTripleCaptain(){
-    useTripleCaptain=true;
+void Team::Changes::recommendTripleCaptain()
+{
+    useTripleCaptain = true;
 }
-void Team::Changes::recommendBenchBoost(){
-    useBenchBoost=true;
-}      
+void Team::Changes::recommendBenchBoost()
+{
+    useBenchBoost = true;
+}
 
-const bool Team::Changes::isBenchBoostRecommended() const{
+bool Team::Changes::isBenchBoostRecommended() const
+{
     return useBenchBoost;
 }
 
-const bool Team::Changes::isTripleCaptainRecommended() const{
+bool Team::Changes::isTripleCaptainRecommended() const
+{
     return useTripleCaptain;
 }
-}//!namespace fantasypremierleague
-
+} //!namespace fantasypremierleague

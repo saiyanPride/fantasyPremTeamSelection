@@ -1,4 +1,4 @@
-objectFiles: main.o ProprietaryAlgorithms.o Team.o Settings.o Chips.o Player.o fantasyExceptions.o
+objectFiles: main.o ProprietaryAlgorithms.o Team.o Settings.o Chips.o Player.o FantasyExceptions.o
 
 fantasyAnalytics: $(objectFiles)
     g++ -std=c++14 -o fantasyAnalytics $(objectFiles)

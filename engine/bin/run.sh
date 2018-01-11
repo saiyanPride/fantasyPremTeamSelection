@@ -2,15 +2,15 @@
 
 # this build script can be used to build the executable or run the executable or both
 # sample usage:
-# 'build.sh - b' -> build executable only
-# 'build.sh - r' -> run executable only
-# 'build.sh - a' -> perform all tasks i.e. build then run executable
+# 'run.sh - b' -> build executable only
+# 'run.sh - r' -> run executable only
+# 'run.sh - a' -> perform all tasks i.e. build then run executable
 
 ScriptName=`basename "$0"`
 EngineDirectory=/Users/NiranPyzzle/Documents/softwareProjects/fantasyPremTeamSelection/engine
 MySQLConnectorIncludePath=$EngineDirectory/lib/mysql-connector-c++-1.1.7-osx10.10-x86-64bit
 ExecutablePath=$EngineDirectory/bin/fantasyAnalytics.exe
-SourceFiles="main.cpp ProprietaryAlgorithms.cpp Team.cpp Settings.cpp Chips.cpp Player.cpp fantasyExceptions.cpp"
+SourceFiles="Main.cpp ProprietaryAlgorithms.cpp Team.cpp Settings.cpp Chips.cpp Player.cpp FantasyExceptions.cpp UserEngagement.cpp"
 
 buildExecutable() {
     info "switching to src directory"

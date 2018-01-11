@@ -1,13 +1,7 @@
 #ifndef FANTASY_ALGO
 #define FANTASY_ALGO
 #include <cstdint>
-#include "Team.hpp"
-#include "Settings.hpp"
-#include "Chips.hpp"
-#include "fantasyExceptions.hpp"
-#include "mysql_connection.h"
 #include <cppconn/driver.h>
-#include "mysql_connection.h"
 #include <cppconn/driver.h>
 #include <cppconn/exception.h>
 #include <cppconn/resultset.h>
@@ -19,6 +13,12 @@
 #include <stdexcept>
 #include <iostream>
 #include <utility>
+#include "Team.hpp"
+#include "Settings.hpp"
+#include "Chips.hpp"
+#include "FantasyExceptions.hpp"
+#include "mysql_connection.h"
+#include "mysql_connection.h"
 
 namespace fantasypremierleague{
   void determineIfWildCardOrFreeHitShouldBeConsidered(Team& currentTeam);
