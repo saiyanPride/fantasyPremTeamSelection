@@ -2,7 +2,7 @@
 namespace fantasypremierleague{
 
 // Summarises team recommendations for the next gameweek
-// Players to buy & sell, best starting lineup, the best candidate for captaincy and which chips to use if any
+// Players to buy & sell, best starting lineup, the best candidate for captaincy and which chips to use if any are displayed
 void displaySuggestedTeamChanges(std::shared_ptr<Team::Changes> suggestedTeamChanges){
 
     auto printHorizontalLine = [](){std::cout<<std::string("-",20)<<std::endl;};
@@ -47,7 +47,7 @@ void displaySuggestedTeamChanges(std::shared_ptr<Team::Changes> suggestedTeamCha
 
 bool shouldImplementTeamChanges(){
     std::cout<<"Would you like the suggested changes to be implemented?"<<std::endl;
-    std::cout<<"if yes: Press any key except 0"<<std::endl;
+    std::cout<<"if yes: PRESS 1, otherwise PRESS 0"<<std::endl;
     bool implement;
     std::cin>>implement;
     return implement;
@@ -60,10 +60,10 @@ void implementTeamChanges(std::shared_ptr<Team::Changes> suggestedTeamChanges){
 
 
 void verifyGameWeekDifficultyUpdate(){
-    std::cout<<"Have you updated gameweek difficulties in your database?\n Enter '0' if you haven't"<<std::endl;
-    bool response;
-    std::cin>>response;
-    if(!response) throw miscellaneous_exception("[Exception] You need to update gameweek difficulties");
+    std::cout<<"Have you updated gameweek difficulties in your database?\n If yes, PRESS 1 otherwise PRESS 0"<<std::endl;
+    bool gameweekdifficultiesHaveBeenUpdated;
+    std::cin>>gameweekdifficultiesHaveBeenUpdated;
+    if(!gameweekdifficultiesHaveBeenUpdated) throw miscellaneous_exception("[Exception] You need to update gameweek difficulties");
    
 }
 }//! namespace fantasypremierleague

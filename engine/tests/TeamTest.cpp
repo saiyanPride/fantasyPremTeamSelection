@@ -1,6 +1,6 @@
 #include "catch.hpp"
 #include "Team.hpp"
-
+using namespace fantasypremierleague;
 TEST_CASE("whenCurrentTeamIsRetrievedStartingLineUpHas11Players"){
     Team myTeam;
     myTeam.updateTeam();
