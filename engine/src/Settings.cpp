@@ -18,7 +18,7 @@ extern const float FORWARD_BUDGET = 25.5;
 extern const float MIDFIELD_BUDGET = 30;
 extern const float DEFENCE_BUDGET = 33.5;
 extern const float GOALKEEPER_BUDGET = 11;
-extern const std::string STATUS_FILE_PATH = "../../dataRetriever/status.json";
+extern const std::string STATUS_FILE_PATH = "../../dataRetriever/dataFiles/status.json";
 
 PlayerPostion getPositionEnum(std::string &playerPosition)
 {

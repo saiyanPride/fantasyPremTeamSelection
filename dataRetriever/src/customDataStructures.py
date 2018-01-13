@@ -1,4 +1,6 @@
 import json
+
+
 class Status(object):
     def __init__(self, isWildCardAvailable, isFreehitAvailable, isTripleCaptainAvailable, isBenchBoostAvailable, noFreeTransfersAvailable, bankBalance, gameweekNo):
         self.isWildCardAvailable = isWildCardAvailable
@@ -10,6 +12,9 @@ class Status(object):
         self.gameweekNo = gameweekNo
 
     def getJson(self):
+        """
+        Returns JSON string representation of `Status` object
+        """
         self.statusDictionary = {
             'isWildCardAvailable': self.isWildCardAvailable,
             'isFreehitAvailable': self.isFreehitAvailable,
@@ -20,16 +25,6 @@ class Status(object):
             'gameweekNo': self.gameweekNo
         }
         return json.dumps(self.statusDictionary)
-
-
-class TeamMember(object):
-    def __init__(self, teamId, playerId, isStarting, isSubstitute, isCaptain, isViceCaptain):
-        self.teamId = teamId
-        self.playerId = playerId
-        self.isStarting = isStarting
-        self.isSubstitute = isSubstitute
-        self.isCaptain = isCaptain
-        self.isViceCaptain = isViceCaptain
 
 
 class PlayerData(object):
@@ -48,9 +43,10 @@ class PlayerData(object):
 
     def getGameweekScoreEstimates(self, gameweekDifficultyList, currentGameWeekNo):
         """
-        In order to determine % contribution of (goals+assists) to a players score. The best case is taken as follows:
-        - players scores every gameweek and assists every other gamweek (suited to striker) OR
-        - players assists every gameweek and scores every other gamweek (suited to MF)
+        Calculates a score out of 100 for the player
+        This score gives an indication of the players chances of obtaining large fantasy points during `currentGameWeekNo`
+        The rules for determining a player's score depends on his position
+        Goal scoring record has a much larger contribution for striker's scores than defender's scores
         """
         maxGWD = 5.0  # GWD -> gameweek difficulty
         maxForm = 10.0
@@ -75,4 +71,4 @@ class PlayerData(object):
         else:
             raise ValueError(
                 '%s has an invalid position: %s' % (self.name, self.position))
-        #print ("%s score for next week is: %s " %(self.name, str(self.gameweekScores[0])))
+        # print ("%s score for next week is: %s " %(self.name, str(self.gameweekScores[0])))
