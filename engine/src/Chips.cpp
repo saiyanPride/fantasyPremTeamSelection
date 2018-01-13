@@ -119,7 +119,7 @@ void Chips::update()
 void Chips::displayChips() const
 {
     auto convertToString = [](bool chip) { return chip ? "Yes" : "No"; };
-    printf("[Info] Displaying chip status\n[Info] ");
+    info("Displaying chip status");
     printf("{noFreeTransfers: %d}; ", noFreeTransfers);
     printf("{wildCardExists: %s}; ", convertToString(wildCardExists));
     printf("{freeHitExists: %s}; ", convertToString(freeHitExists));

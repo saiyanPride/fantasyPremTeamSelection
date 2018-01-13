@@ -84,10 +84,10 @@ Player::Player(const std::string &_club, const std::string &_name, float _value,
 
 void Player::display() const
 {
-    std::cout << "{ Name : " << name << " },\t\t";
+    std::cout << "{ Name : " << name << " }\n";
     std::cout << "{ Club : " << club << " },\t";
     std::cout << "{ AvgScore : " << avgFutureScore << " },\t";
     std::cout << "{ NextGWScore : " << nextGameweekScore << " },\t";
-    std::cout << "{ Value : " << value << " }; " << std::endl;
+    std::cout << "{ Value : " << value << " };\n\n " << std::endl;
 }
 } //!namespace fantasypremierleague

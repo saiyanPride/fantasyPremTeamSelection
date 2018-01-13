@@ -11,6 +11,7 @@
 #include <algorithm>
 #include "Settings.hpp"
 #include "FantasyExceptions.hpp"
+#include "Logger.hpp"
 namespace fantasypremierleague
 {
 // Chips enable users to perform actions not normally available

@@ -12,6 +12,7 @@
 #include "mysql_connection.h"
 #include "Team.hpp"
 #include "ProprietaryAlgorithms.hpp"
+#include "Logger.hpp"
 namespace fantasypremierleague
 {
 
@@ -25,7 +26,14 @@ Team::Team()
 // Retrieves current team (starting lineup & substitutes) from data source and updates corresponding data members
 // Captain & Vice Captain are intentionally not retrieved, as recommendation algo will suggest best choices for these roles whether transfers are suggested or not
 void Team::updateTeam()
-{
+{   
+    info("updating team");
+    //backup current team before deleting
+    auto startingLineUpBackup = startingLineUp;
+    auto substitutesBackup = substitutes;
+    startingLineUp.clear();
+    substitutes.clear();
+
     //query database for current team players
     const char *currentPlayersSql = "SELECT Club, Name, Position, FirstGameweekScore, AvgScore FROM PlayerStats WHERE isFirstTeam > 0 ORDER BY AvgScore DESC";
     try
@@ -33,7 +41,6 @@ void Team::updateTeam()
         std::shared_ptr<sql::Statement> stmt(DataRetriever::getDataRetriever().getStatement());
         std::unique_ptr<sql::ResultSet> res(stmt->executeQuery("SELECT * FROM PlayerStats WHERE isFirstTeam > 0 ORDER BY AvgScore DESC"));
         //Instantiate a player object for each player in your current team and store in the starters or substitutes list
-        std::cout << "[INFO] creating player objects" << std::endl; //TODO: use a uniform logging function e.g. info(), warn()
         while (res->next())
         {
             int rankFlag = res->getInt("isFirstTeam"); //1-> subs, 2-> starter
@@ -46,9 +53,13 @@ void Team::updateTeam()
             float avgGWScore = res->getDouble("AvgScore");
             (rankFlag == 2) ? startingLineUp.push_back(Player(club, name, value, position, firstGWScore, avgGWScore)) : substitutes.push_back(Player(club, name, value, position, firstGWScore, avgGWScore));
         }
+        info("team update successful");
     }
     catch (sql::SQLException &e)
     {
+        warn("team update unsuccessful, reverting to old team");
+        startingLineUp = startingLineUpBackup;
+        substitutes = substitutesBackup;
         std::cout << "[ERROR]: SQLException in " << __FILE__;
         std::cout << "[ERROR] " << e.what();
         std::cout << "[ERROR] (MySQL error code: " << e.getErrorCode();
