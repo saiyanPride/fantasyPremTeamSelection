@@ -214,7 +214,7 @@ def getStatus():
 
     # determine the status of these chips: 1) BenchBoost, 2) Free hit, 3) Triple Captain
     for index, selector in enumerate(cssSelectors):
-        info("waiting for presence of selector")
+        info("waiting for presence of benchboost/freehit/triple captain button")
         wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, selector)))
         elem = driver.find_element_by_css_selector(selector)
         chipAction = elem.text
