@@ -2,9 +2,14 @@
 #include <unordered_map>
 #include "Player.hpp"
 #include "Settings.hpp"
+#include "Team.hpp"
 using std::string;
 using std::vector;
 
+//TODO: make all sure all new code compiles
+//TODO: start using the new functions
+//TODO: add integration tests
+//TODO: extend/optimise over time as needed
 namespace fantasypremierleague
 {
 
@@ -20,39 +25,24 @@ struct Constraints{
     const int costPerNonFreeTransfer; // default value in settings which is -4
 };
 
-//TODO: define this class somewhere FPLAnalytics
-/*
-result is of form {
-    "FORWARD" : {},
-    "MIDFIELDER" : {},
-    "DEFENDER" : {},
-    "GOALKEEPER" : {}
-}
-*/
+//TODO: optional: relocate this class if needed
+class FplAnalytics{ //TODO: impl
 
-class FPLAnalytics;
-PotentialSquad chooseTopNSquads(const Constraints& constraints, const int n);
+    Constraints constraints;
+    public:
+        FplAnalytics(const Constraints& constraints_): constraints(constraints_){};
+        Players getPrunedStrikers();//TODO: impl
+        Players getPrunedMidfielders();//TODO: impl
+        Players getPrunedDefenders();//TODO: impl
+        vector< std::pair<Player,Player> > getPrunedGoalkeeperPairs();//TODO: impl
+};
+
+PotentialSquad chooseTopNSquads(const Constraints& constraints, const int n, Team &currentTeam);
 
 vector<PotentialSquad> generateTeamsThatSatisfyBudgetConstraints(const Constraints& constraints,  const PlayersByPosition& outfieldPlayerOptions, const GoalkeeperPairs& goalkeeperOptions);
 
 void generateTeamsThatSatisfyBudgetConstraints(vector<PotentialSquad>& results, PotentialSquad& playersChosenSoFar, const float budget, const PlayersByPosition& outfieldPlayerOptions, const GoalkeeperPairs& goalkeeperOptions,
  std::unordered_map<PlayerPostion, int>& nextPlayerToConsiderIndexByPosition);
 
-/*
-
-gameWeekHorizon: numberOfGameWeeks to consider
-
-This should filter out squads that can't be achieved via numberOfAvailableFreeTransfers and any other relevant constraint
-*/
-vector<PotentialSquad> filterForViableSquads(vector<PotentialSquad>& squads, const Constraints& constraints);
-
-
-/*
-
-//TODO: implementation
-once all potential squads have been ranked
-for each one we determine the number of free transfers needed to achieve, if value <= available free transfers => include in result
-*/
-vector<PotentialSquad> getAttainableSquadsByNumberOfFreeTransfers(vector<PotentialSquad>& squads, const Constraints& constraints);
-
-};// ! namespace fantasypremierleague
+vector<PotentialSquad> getTopNSquads(const vector<PotentialSquad>& candidateSquads, const int n, Team &currentTeam);
+}//!namespace fantasypremierleague

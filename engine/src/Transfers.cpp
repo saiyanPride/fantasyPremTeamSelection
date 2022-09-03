@@ -1,9 +1,11 @@
 #include "Transfers.hpp"
+#include <numeric>
+using namespace std;
 
 namespace fantasypremierleague
 {
 
-PotentialSquad chooseTopNSquads(const Constraints& constraints, const int n){
+PotentialSquad chooseTopNSquads(const Constraints& constraints, const int n, Team &currentTeam){
     /*
     TODO: actualy use this algo by calling this function in appropriate place
 
@@ -12,40 +14,115 @@ PotentialSquad chooseTopNSquads(const Constraints& constraints, const int n){
         freeHit => Constraints(budget=B, numFreeTransfers = INT_MAX, numGameWeeksToConsider= 1)
         wildcard => Constraints(budget=B, numFreeTransfers = INT_MAX, numGameWeeksToConsider= DEFAULTe.g. 5)
     */
-    FPLAnalytics(constraints.gameWeekHorizon) fplAnalytics; // TODO: sort out the FPLAnalytics class, interface etc
+    FplAnalytics fplAnalytics(constraints.gameWeekHorizon); // TODO: sort out the FPLAnalytics class, interface etc
 
     // prune the players, to limit the numbers of players in scope for selection, and reduce degree of combinatorial explosion
     PlayersByPosition outfieldPlayersToConsider;
 
     outfieldPlayersToConsider[PlayerPostion::FORWARD] = fplAnalytics.getPrunedStrikers();
-    outfieldPlayersToConsider[PlayerPostion::MIDFIELDER] = fplAnalytics.getMidfielders();
-    outfieldPlayersToConsider[PlayerPostion::DEFENDER] = fplAnalytics.getDefenders();
-    vector< std::pair<Player,Player> > goalkeepersToConsider = fplAnalytics.getGoalkeepers(); // sorted list of goalkeeper pairs by appropriate ranking mechanism that ensure their fixtures are complementary
+    outfieldPlayersToConsider[PlayerPostion::MIDFIELDER] = fplAnalytics.getPrunedMidfielders();
+    outfieldPlayersToConsider[PlayerPostion::DEFENDER] = fplAnalytics.getPrunedDefenders();
+    vector< std::pair<Player,Player> > goalkeepersToConsider = fplAnalytics.getPrunedGoalkeeperPairs(); // sorted list of goalkeeper pairs by appropriate ranking mechanism that ensure their fixtures are complementary
 
     // generate potential squads that satisfy constraints
     vector<PotentialSquad> candidateSquads = generateTeamsThatSatisfyBudgetConstraints(constraints, outfieldPlayersToConsider, goalkeepersToConsider);
-    return getTopNSquads(candidateSquads);
+    return getTopNSquads(candidateSquads, currentTeam, constraints);
 }
 
-vector<PotentialSquad> getTopNSquads(const vector<PotentialSquad>& candidateSquads, const int n){// NEBUG: to impl
-    vector<PotentialSquad> viableSquads = filterForViableSquads(candidateSquads, constraints);//TODO: optimise to reduce allocation
-    vector<PotentialSquad>& viableSquadsMaxHeap = viableSquads;
+class EnrichedSquad{ //TODO: optional consider relocating this
+    PotentialSquad squad;
+    vector<float> squadPredictedFutureGameWeekScores;
+    float totalFutureGameWeekScores;//TODO: optional maybe weight scores by gameweek, with GW1 having greater weighting
+    public:
+    EnrichedSquad(const PotentialSquad& squad_):squad(squad_){
+        
+        if(squad_.empty()){
+            cout<<"[ERROR] received an empty squad"<<endl;
+        }else{
 
-    //TODO: rank squads by topPriority e.g. use heapify on viableSquadsHeap
+            totalFutureGameWeekScores = 0.0f;
+            squadPredictedFutureGameWeekScores = vector<float>(squad_[0].getPredictedFutureGameWeekScores().size());
+            
+            for(int j =0; j<squad_.size(); ++j){
+                const Player& player = squad_[j];
+                const std::vector<float>& playerPredictedFutureGameWeekScores = player.getPredictedFutureGameWeekScores();
+                for(int i=0; i<playerPredictedFutureGameWeekScores.size(); ++i){
+                    totalFutureGameWeekScores += playerPredictedFutureGameWeekScores.at(i);
+                    squadPredictedFutureGameWeekScores[i] += playerPredictedFutureGameWeekScores.at(i);
+                }
+
+            }
+        }
+    }
+
+    float& getTotalFutureGameWeekScores(){
+        return totalFutureGameWeekScores;
+    }
+    
     /*
-    This gets a score for the next `gameWeekHorizon` for each squad and ranks them
 
-    a simplistic approach will just total the predicted points, but because a lot can change in the future and there's room for transfers for future gameweeks
-    implementation should assign higher weighting to gameweek i, than gameweek i+1
-
-    This should factor in the cost of transfers as well, when determining total
+    Apply cost of free transfer, chip or anything to the gameweek scores
     */
+    void applyCost(float cost){
+        totalFutureGameWeekScores -= cost;
+        squadPredictedFutureGameWeekScores[0] -= cost; // apply transfer costs to the next gameweek
+
+    }
+
+
+    vector<float> getSquadPredictedFutureGameWeekScores() const{
+        return squadPredictedFutureGameWeekScores;
+    }
+
+    
+    
+};
+
+vector<PotentialSquad> getTopNSquads(const vector<PotentialSquad>& candidateSquads, const int n, Team &currentTeam, const Constraints& constraints){// TODO: test this!! important that order is correct
+
+    EnrichedSquad currentSquad(currentTeam.getMergedTeamList());
+
+    vector<EnrichedSquad> squadsBetterThanCurrentSquad;
+    squadsBetterThanCurrentSquad.reserve(candidateSquads.size()); 
+
+    for (PotentialSquad& candidateSquad : candidateSquads){
+        int numberOfTransfersRequired = currentTeam.getChangesRequiredToFormNewTeam(candidateSquad)->toSell.size();
+        int numberOfNonFreeTransfers =  max(0, numberOfTransfersRequired - constraints.numFreeTransfers);
+        float cost = constraints.costPerNonFreeTransfer * numberOfNonFreeTransfers;
+        EnrichedSquad candidateSquadData(candidateSquad);
+        candidateSquadData.applyCost(cost);
+
+        if(// exclude candidate squads not better than current squad in terms of next GW points and future GW points 
+            candidateSquadData.getSquadPredictedFutureGameWeekScores().at(0) <= currentSquad.getSquadPredictedFutureGameWeekScores().at(0) ||
+            candidateSquadData.getTotalFutureGameWeekScores() <= currentSquad.getTotalFutureGameWeekScores()
+        ){
+            continue; //skip `candidateSquad`, not worth considering 
+        }
+        squadsBetterThanCurrentSquad.push_back(move(candidateSquadData));
+    }
+    
+    auto isFirstSquadLessValuableThanSecond = [](const EnrichedSquad& first, const EnrichedSquad& second) -> bool
+    {
+        // check next gameweek points
+        float next_gw_points_first = first.getSquadPredictedFutureGameWeekScores().at(0);
+        float next_gw_points_second = second.getSquadPredictedFutureGameWeekScores().at(0);
+        if(next_gw_points_first != next_gw_points_second){
+            return next_gw_points_first < next_gw_points_second;
+        }
+
+        // tie breaker
+        return first.getTotalFutureGameWeekScores() <= second.getTotalFutureGameWeekScores();
+    };
+
+    vector<EnrichedSquad>& viableSquadsMaxHeap = squadsBetterThanCurrentSquad;
+    make_heap(viableSquadsMaxHeap.begin(), viableSquadsMaxHeap.end(),isFirstSquadLessValuableThanSecond);
+
     vector<PotentialSquad> topNSquads;
     topNSquads.reserve(n);
 
     for(int i=0; i<n; ++i){
         topNSquads.push_back(std::move(viableSquadsMaxHeap.front()));
-        //std::pop_heap(topNSquads.begin(), topNSquads.end()); //TODO: include the comparator for popping
+        std::pop_heap(viableSquadsMaxHeap.begin(), viableSquadsMaxHeap.end(),isFirstSquadLessValuableThanSecond);
     }
     return topNSquads;
 
@@ -133,22 +210,5 @@ void generateTeamsThatSatisfyBudgetConstraints(vector<PotentialSquad>& results, 
     
 }
 
-
-vector<PotentialSquad> filterForViableSquads(vector<PotentialSquad>& squads, const Constraints& constraints){// NEBUG: to impl
-    //TODOs
-
-    //TODO: should filter out squads that don't satisfy `constraints`, could use `getAttainableSquadsByNumberOfFreeTransfers` if sensible
-        // if wildcard then cosntrains is different from when we have 2 free transfers versus freeHit
-
-    // NEBUG: you already have a function for determining number of transfers needed to achieve a squad from current squad, RESUE IT!!
-}
-
-
-vector<PotentialSquad> getAttainableSquadsByNumberOfFreeTransfers(vector<PotentialSquad>& squads, const Constraints& constraints){// NEBUG: to impl if needed
-    //TODO if needed
-}
-
-};// ! namespace fantasypremierleague
-
-
+} //!namespace fantasypremierleague
 //NEBUG: test code

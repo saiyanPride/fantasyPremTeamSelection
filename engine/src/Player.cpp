@@ -16,6 +16,10 @@ const std::string &Player::getClub() const
     return club;
 };
 
+std::vector<float> Player::getPredictedFutureGameWeekScores() const{
+    return predictedFutureGameWeekScores;
+}
+
 bool Player::operator==(const Player &other) const
 {
     return name == other.name && club == other.club && value == other.value;
@@ -28,7 +32,7 @@ bool Player::operator()(const Player &player1, const Player &player2) const
 
 float Player::getNextGameWeekScore() const
 {
-    return nextGameweekScore;
+    return nextGameweekScore; //TODO: deprecate this member, and instead `return predictedFutureGameWeekScores[0]`
 }
 
 const PlayerPostion &Player::getPosition() const
@@ -45,7 +49,8 @@ Player::~Player(){};
 
 Player::Player(const Player &player)
     : club(player.club), name(player.name), value(player.value), position(player.position),
-      nextGameweekScore(player.nextGameweekScore), avgFutureScore(player.avgFutureScore)
+      nextGameweekScore(player.nextGameweekScore), avgFutureScore(player.avgFutureScore),
+       predictedFutureGameWeekScores(player.predictedFutureGameWeekScores)
 {
 }
 
@@ -63,6 +68,7 @@ Player &Player::operator=(const Player &player)
         position = player.position;
         nextGameweekScore = player.nextGameweekScore;
         avgFutureScore = player.avgFutureScore;
+        predictedFutureGameWeekScores = player.predictedFutureGameWeekScores;
     }
     return *this;
 }
@@ -75,10 +81,11 @@ Player::Player(Player &&player)
     position = player.position;
     nextGameweekScore = player.nextGameweekScore;
     avgFutureScore = player.avgFutureScore;
+    predictedFutureGameWeekScores = std::move(player.predictedFutureGameWeekScores);
 }
 
-Player::Player(const std::string &_club, const std::string &_name, float _value, const PlayerPostion &_position, float _nextGameweekScore, float _avgFutureScore)
-    : club(_club), name(_name), value(_value), position(_position), nextGameweekScore(_nextGameweekScore), avgFutureScore(_avgFutureScore)
+Player::Player(const std::string &_club, const std::string &_name, float _value, const PlayerPostion &_position, float _nextGameweekScore, float _avgFutureScore, std::vector<float> _predictedFutureGameWeekScores)
+    : club(_club), name(_name), value(_value), position(_position), nextGameweekScore(_nextGameweekScore), avgFutureScore(_avgFutureScore), predictedFutureGameWeekScores(_predictedFutureGameWeekScores)
 {
 }
 
