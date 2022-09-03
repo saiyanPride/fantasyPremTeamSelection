@@ -12,7 +12,7 @@ EngineDirectory=/Users/NiranPyzzle/Documents/softwareProjects/fantasyPremTeamSel
 MySQLConnectorIncludePath=$EngineDirectory/lib/mysql-connector-c++-1.1.7-osx10.10-x86-64bit
 ExecutablePath=$EngineDirectory/bin/fantasyAnalytics.exe
 TestExecutablePath=$EngineDirectory/tests/bin/fantasyAnalyticsTest.exe
-SourceFilesExcludingMain="Logger.cpp ProprietaryAlgorithms.cpp Team.cpp Settings.cpp Chips.cpp Player.cpp FantasyExceptions.cpp UserEngagement.cpp Transfers.cpp"
+SourceFilesExcludingMain="Logger.cpp ProprietaryAlgorithms.cpp Team.cpp Settings.cpp Chips.cpp Player.cpp FantasyExceptions.cpp UserEngagement.cpp"
 SourceFiles="Main.cpp ${SourceFilesExcludingMain}"
 TestSourceFiles="${EngineDirectory}/tests/TestsMain.cpp ${EngineDirectory}/tests/TeamTest.cpp ${SourceFilesExcludingMain}"
 
