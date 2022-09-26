@@ -2,10 +2,10 @@
 
 # this build script can be used to build the executable or run the executable or both
 # sample usage:
-# 'run.sh - b' -> build executable only
-# 'run.sh - r' -> run executable only
-# 'run.sh - t' -> build then run unit TESTS
-# 'run.sh - a' -> build then run executable
+# 'run.sh -b' -> build executable only
+# 'run.sh -r' -> run executable only
+# 'run.sh -t' -> build then run unit TESTS
+# 'run.sh -a' -> build then run executable
 
 ScriptName=`basename "$0"`
 EngineDirectory=/Users/NiranPyzzle/Documents/softwareProjects/fantasyPremTeamSelection/engine
@@ -21,7 +21,7 @@ buildUnitTests() {
   info "switching to src directory"
   cd $EngineDirectory/src
   info "building test executable"
-  g++ -std=c++14 -o $TestExecutablePath $TestSourceFiles -I${EngineDirectory}/src -I$MySQLConnectorIncludePath/include -I/Users/NiranPyzzle/Documents/boost/include -L$MySQLConnectorIncludePath/lib -lmysqlcppconn
+  g++ -std=c++14 -o $TestExecutablePath $TestSourceFiles -I${EngineDirectory}/src -I$MySQLConnectorIncludePath/include -I/Users/NiranPyzzle/Documents/libraries/active_boost_version/boost -L$MySQLConnectorIncludePath/lib -lmysqlcppconn
   info "build complete"
 
 }

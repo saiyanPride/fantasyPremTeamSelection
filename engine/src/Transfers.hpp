@@ -10,6 +10,7 @@ using std::vector;
 //TODO: start using the new functions
 //TODO: add integration tests
 //TODO: extend/optimise over time as needed
+//TODO: add linter
 namespace fantasypremierleague
 {
 

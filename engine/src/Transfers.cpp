@@ -183,9 +183,9 @@ void generateTeamsThatSatisfyBudgetConstraints(vector<PotentialSquad>& results, 
 
     if(playersChosenSoFar.size() < REQUIRED_NO_FORWARDS){ // levels 0-2: choose strikers
         descendInTree(PlayerPostion::FORWARD);
-    }elif(playersChosenSoFar.size() < REQUIRED_NO_FORWARDS + REQUIRED_NO_MIDFIELDER){ // levels 3 to 7:  choose midfielders
+    }else if(playersChosenSoFar.size() < REQUIRED_NO_FORWARDS + REQUIRED_NO_MIDFIELDER){ // levels 3 to 7:  choose midfielders
         descendInTree(PlayerPostion::MIDFIELDER);
-    }elif(playersChosenSoFar.size() < REQUIRED_NO_FORWARDS + REQUIRED_NO_MIDFIELDER + REQUIRED_NO_DEFENDERS){// levels 8  to 12: choose defenders
+    }else if(playersChosenSoFar.size() < REQUIRED_NO_FORWARDS + REQUIRED_NO_MIDFIELDER + REQUIRED_NO_DEFENDERS){// levels 8  to 12: choose defenders
         descendInTree(PlayerPostion::DEFENDER);
     }else{//leaf node // // level 13: choose a goalkeeper pair i.e. 2 goalkeepers and store result in results
         auto playerPosition =  PlayerPostion::GOALKEEPER;
