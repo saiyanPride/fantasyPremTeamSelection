@@ -5,7 +5,7 @@ using namespace std;
 namespace fantasypremierleague
 {
 
-PotentialSquad chooseTopNSquads(const Constraints& constraints, const int n, Team &currentTeam){
+vector<PotentialSquad> chooseTopNSquads(const Constraints& constraints, const int n, Team &currentTeam){
     /*
     TODO: actualy use this algo by calling this function in appropriate place
 
@@ -14,7 +14,7 @@ PotentialSquad chooseTopNSquads(const Constraints& constraints, const int n, Tea
         freeHit => Constraints(budget=B, numFreeTransfers = INT_MAX, numGameWeeksToConsider= 1)
         wildcard => Constraints(budget=B, numFreeTransfers = INT_MAX, numGameWeeksToConsider= DEFAULTe.g. 5)
     */
-    FplAnalytics fplAnalytics(constraints.gameWeekHorizon); // TODO: sort out the FPLAnalytics class, interface etc
+    FplAnalytics fplAnalytics(constraints); // TODO: sort out the FPLAnalytics class, interface etc
 
     // prune the players, to limit the numbers of players in scope for selection, and reduce degree of combinatorial explosion
     PlayersByPosition outfieldPlayersToConsider;
@@ -26,7 +26,7 @@ PotentialSquad chooseTopNSquads(const Constraints& constraints, const int n, Tea
 
     // generate potential squads that satisfy constraints
     vector<PotentialSquad> candidateSquads = generateTeamsThatSatisfyBudgetConstraints(constraints, outfieldPlayersToConsider, goalkeepersToConsider);
-    return getTopNSquads(candidateSquads, currentTeam, constraints);
+    return getTopNSquads(candidateSquads,MAX_NUMBER_OF_BETTER_SQUADS_TO_CONSIDER_DURING_OVERHAULS,currentTeam, constraints);
 }
 
 class EnrichedSquad{ //TODO: optional consider relocating this
@@ -55,7 +55,11 @@ class EnrichedSquad{ //TODO: optional consider relocating this
         }
     }
 
-    float& getTotalFutureGameWeekScores(){
+    PotentialSquad getSquad() const{ //TODO: return const&?
+        return squad;
+    }
+
+    float getTotalFutureGameWeekScores() const{
         return totalFutureGameWeekScores;
     }
     
@@ -83,8 +87,9 @@ vector<PotentialSquad> getTopNSquads(const vector<PotentialSquad>& candidateSqua
     EnrichedSquad currentSquad(currentTeam.getMergedTeamList());
 
     vector<EnrichedSquad> squadsBetterThanCurrentSquad;
-    squadsBetterThanCurrentSquad.reserve(candidateSquads.size()); 
+    squadsBetterThanCurrentSquad.reserve(candidateSquads.size()); //TODO: consider performance implication of overallocating
 
+    // populate `squadsBetterThanCurrentSquad`
     for (PotentialSquad& candidateSquad : candidateSquads){
         int numberOfTransfersRequired = currentTeam.getChangesRequiredToFormNewTeam(candidateSquad)->toSell.size();
         int numberOfNonFreeTransfers =  max(0, numberOfTransfersRequired - constraints.numFreeTransfers);
@@ -114,6 +119,7 @@ vector<PotentialSquad> getTopNSquads(const vector<PotentialSquad>& candidateSqua
         return first.getTotalFutureGameWeekScores() <= second.getTotalFutureGameWeekScores();
     };
 
+    // get the top N squads Better Than CurrentSquad
     vector<EnrichedSquad>& viableSquadsMaxHeap = squadsBetterThanCurrentSquad;
     make_heap(viableSquadsMaxHeap.begin(), viableSquadsMaxHeap.end(),isFirstSquadLessValuableThanSecond);
 
@@ -121,7 +127,7 @@ vector<PotentialSquad> getTopNSquads(const vector<PotentialSquad>& candidateSqua
     topNSquads.reserve(n);
 
     for(int i=0; i<n; ++i){
-        topNSquads.push_back(std::move(viableSquadsMaxHeap.front()));
+        topNSquads.push_back(std::move(viableSquadsMaxHeap.front().getSquad()));
         std::pop_heap(viableSquadsMaxHeap.begin(), viableSquadsMaxHeap.end(),isFirstSquadLessValuableThanSecond);
     }
     return topNSquads;
@@ -188,14 +194,15 @@ void generateTeamsThatSatisfyBudgetConstraints(vector<PotentialSquad>& results, 
     }else if(playersChosenSoFar.size() < REQUIRED_NO_FORWARDS + REQUIRED_NO_MIDFIELDER + REQUIRED_NO_DEFENDERS){// levels 8  to 12: choose defenders
         descendInTree(PlayerPostion::DEFENDER);
     }else{//leaf node // // level 13: choose a goalkeeper pair i.e. 2 goalkeepers and store result in results
-        auto playerPosition =  PlayerPostion::GOALKEEPER;
-        for(int i=nextPlayerToConsiderIndexByPosition[playerPosition]; i<goalkeeperOptions[playerPosition].size(); ++i){
+        for(int i=0; i<goalkeeperOptions.size(); ++i){
 
             //choose pair of goalies
-            const auto& nextGoalkeeperPair = goalkeeperOptions[playerPosition][i];
+            const auto& nextGoalkeeperPair = goalkeeperOptions[i];
             auto goalie1 = nextGoalkeeperPair.first;
             auto goalie2 = nextGoalkeeperPair.second;
             if(goalie1.getValue() + goalie2.getValue() > budget) continue;
+            
+            // choosing this goalkeeper pair is within budget constraints
             playersChosenSoFar.push_back(goalie1);
             playersChosenSoFar.push_back(goalie2);
             

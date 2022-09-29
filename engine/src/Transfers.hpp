@@ -29,7 +29,7 @@ struct Constraints{
 //TODO: optional: relocate this class if needed
 class FplAnalytics{ //TODO: impl
 
-    Constraints constraints;
+    const Constraints constraints;
     public:
         FplAnalytics(const Constraints& constraints_): constraints(constraints_){};
         Players getPrunedStrikers();//TODO: impl
@@ -38,12 +38,12 @@ class FplAnalytics{ //TODO: impl
         vector< std::pair<Player,Player> > getPrunedGoalkeeperPairs();//TODO: impl
 };
 
-PotentialSquad chooseTopNSquads(const Constraints& constraints, const int n, Team &currentTeam);
+vector<PotentialSquad> chooseTopNSquads(const Constraints& constraints, const int n, Team &currentTeam);
 
 vector<PotentialSquad> generateTeamsThatSatisfyBudgetConstraints(const Constraints& constraints,  const PlayersByPosition& outfieldPlayerOptions, const GoalkeeperPairs& goalkeeperOptions);
 
 void generateTeamsThatSatisfyBudgetConstraints(vector<PotentialSquad>& results, PotentialSquad& playersChosenSoFar, const float budget, const PlayersByPosition& outfieldPlayerOptions, const GoalkeeperPairs& goalkeeperOptions,
  std::unordered_map<PlayerPostion, int>& nextPlayerToConsiderIndexByPosition);
 
-vector<PotentialSquad> getTopNSquads(const vector<PotentialSquad>& candidateSquads, const int n, Team &currentTeam);
+vector<PotentialSquad> getTopNSquads(const vector<PotentialSquad>& candidateSquads, const int n, Team &currentTeam, const Constraints& constraints);
 }//!namespace fantasypremierleague

@@ -66,12 +66,12 @@ extern const uint8_t REQUIRED_NO_DEFENDERS;
 extern const uint8_t REQUIRED_NO_GOALKEEPERS;
 extern const uint8_t MINIMUM_NO_CHANGES_REQUIRED_WITH_WILDCARD;
 extern const uint8_t MINIMUM_NO_CHANGES_REQUIRED_WITH_FREEHIT;
+extern const uint8_t MAX_NUMBER_OF_BETTER_SQUADS_TO_CONSIDER_DURING_OVERHAULS;
 extern const uint8_t STARTING_LINE_UP_SIZE;
 extern const float FORWARD_BUDGET; // max budget for forwards
 extern const float MIDFIELD_BUDGET;
 extern const float DEFENCE_BUDGET;
-extern const float GOALKEEPER_BUDGET;
-
+extern const float GOALKEEPER_BUDGET; 
 extern const std::string STATUS_FILE_PATH;
 
 PlayerPostion getPositionEnum(std::string &playerPosition);

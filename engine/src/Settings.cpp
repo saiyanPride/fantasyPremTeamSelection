@@ -14,6 +14,7 @@ extern const uint8_t REQUIRED_NO_GOALKEEPERS = 2;
 extern const uint8_t STARTING_LINE_UP_SIZE = 11;
 extern const uint8_t MINIMUM_NO_CHANGES_REQUIRED_WITH_WILDCARD = 2;
 extern const uint8_t MINIMUM_NO_CHANGES_REQUIRED_WITH_FREEHIT = 2;
+extern const uint8_t MAX_NUMBER_OF_BETTER_SQUADS_TO_CONSIDER_DURING_OVERHAULS = 20;
 extern const float FORWARD_BUDGET = 25.5;
 extern const float MIDFIELD_BUDGET = 30;
 extern const float DEFENCE_BUDGET = 33.5;
