@@ -90,7 +90,7 @@ vector<PotentialSquad> getTopNSquads(const vector<PotentialSquad>& candidateSqua
     squadsBetterThanCurrentSquad.reserve(candidateSquads.size()); //TODO: consider performance implication of overallocating
 
     // populate `squadsBetterThanCurrentSquad`
-    for (PotentialSquad& candidateSquad : candidateSquads){
+    for (const PotentialSquad& candidateSquad : candidateSquads){
         int numberOfTransfersRequired = currentTeam.getChangesRequiredToFormNewTeam(candidateSquad)->toSell.size();
         int numberOfNonFreeTransfers =  max(0, numberOfTransfersRequired - constraints.numFreeTransfers);
         float cost = constraints.costPerNonFreeTransfer * numberOfNonFreeTransfers;
@@ -147,7 +147,8 @@ vector<PotentialSquad> generateTeamsThatSatisfyBudgetConstraints(
             {PlayerPostion::DEFENDER, 0},
             {PlayerPostion::GOALKEEPER,0}
         };
-        return generateTeamsThatSatisfyBudgetConstraints(results,playersChosenSoFar,constraints.budget,outfieldPlayerOptions,goalkeeperOptions,nextPlayerToConsiderIndexByPosition);
+        generateTeamsThatSatisfyBudgetConstraints(results,playersChosenSoFar,constraints.budget,outfieldPlayerOptions,goalkeeperOptions,nextPlayerToConsiderIndexByPosition);
+        return results;
 }
 
 void generateTeamsThatSatisfyBudgetConstraints(vector<PotentialSquad>& results, PotentialSquad& playersChosenSoFar, 
@@ -171,8 +172,8 @@ void generateTeamsThatSatisfyBudgetConstraints(vector<PotentialSquad>& results, 
     */
 
     auto descendInTree = [&](const PlayerPostion& playerPosition){//every descent leads to the next outfield player being chosen
-        for(int i=nextPlayerToConsiderIndexByPosition[playerPosition]; i<outfieldPlayerOptions[playerPosition].size(); ++i){
-            const auto& nextPlayer = outfieldPlayerOptions[playerPosition][i];
+        for(int i=nextPlayerToConsiderIndexByPosition[playerPosition]; i< outfieldPlayerOptions.find(playerPosition)->second.size(); ++i){
+            const auto& nextPlayer = outfieldPlayerOptions.find(playerPosition)->second.at(i);
             if(nextPlayer.getValue() > budget) continue;
             playersChosenSoFar.push_back(nextPlayer);
             

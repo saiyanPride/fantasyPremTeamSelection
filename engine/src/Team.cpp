@@ -128,7 +128,7 @@ uint8_t Team::getGameWeekNum() const
     return gameweekNum;
 }
 
-std::shared_ptr<Team::Changes> Team::getChangesRequiredToFormNewTeam(std::vector<Player> &newTeam) const
+std::shared_ptr<Team::Changes> Team::getChangesRequiredToFormNewTeam(const std::vector<Player> &newTeam) const
 {
     std::vector<Player> toSell;
     std::vector<Player> toBuy;
@@ -142,7 +142,7 @@ std::shared_ptr<Team::Changes> Team::getChangesRequiredToFormNewTeam(std::vector
         frequencyOfPlayersInCurrentTeam.insert(std::make_pair(currentPlayer, 1));
 
     //determine players that are exclusive to either the current team or `newTeam` i.e. players that should be bought and sold
-    for (auto newPlayer : newTeam)
+    for (const auto& newPlayer : newTeam)
     {
         if (frequencyOfPlayersInCurrentTeam.find(newPlayer) != frequencyOfPlayersInCurrentTeam.end())
         {                                                    // player exists in both lists so player is retained

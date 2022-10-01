@@ -9,19 +9,25 @@
 
 ScriptName=`basename "$0"`
 EngineDirectory=/Users/NiranPyzzle/Documents/softwareProjects/fantasyPremTeamSelection/engine
+
+# include paths
 MySQLConnectorIncludePath=$EngineDirectory/lib/mysql-connector-c++-1.1.7-osx10.10-x86-64bit
+BoostLibraryIncludePath=/Users/NiranPyzzle/Documents/libraries/active_boost_version
+
+# executable paths
 ExecutablePath=$EngineDirectory/bin/fantasyAnalytics.exe
 TestExecutablePath=$EngineDirectory/tests/bin/fantasyAnalyticsTest.exe
+
+# source files
 SourceFilesExcludingMain="Logger.cpp ProprietaryAlgorithms.cpp Team.cpp Settings.cpp Chips.cpp Player.cpp FantasyExceptions.cpp UserEngagement.cpp Transfers.cpp"
 SourceFiles="Main.cpp ${SourceFilesExcludingMain}"
 TestSourceFiles="${EngineDirectory}/tests/TestsMain.cpp ${EngineDirectory}/tests/TeamTest.cpp ${SourceFilesExcludingMain}"
-
 
 buildUnitTests() {
   info "switching to src directory"
   cd $EngineDirectory/src
   info "building test executable"
-  g++ -std=c++14 -o $TestExecutablePath $TestSourceFiles -I${EngineDirectory}/src -I$MySQLConnectorIncludePath/include -I/Users/NiranPyzzle/Documents/libraries/active_boost_version/boost -L$MySQLConnectorIncludePath/lib -lmysqlcppconn
+  g++ -std=c++14 -o $TestExecutablePath $TestSourceFiles -I${EngineDirectory}/src -I$MySQLConnectorIncludePath/include -I$BoostLibraryIncludePath -L$MySQLConnectorIncludePath/lib -lmysqlcppconn
   info "build complete"
 
 }
@@ -42,7 +48,7 @@ buildExecutable() {
     info "switching to src directory"
     cd $EngineDirectory/src
     info "building executable"
-    g++ -std=c++14 -o $ExecutablePath $SourceFiles -I$MySQLConnectorIncludePath/include -I/Users/NiranPyzzle/Documents/boost/include -L$MySQLConnectorIncludePath/lib -lmysqlcppconn
+    g++ -std=c++14 -o $ExecutablePath $SourceFiles -I$MySQLConnectorIncludePath/include -I$BoostLibraryIncludePath -L$MySQLConnectorIncludePath/lib -lmysqlcppconn
     info "build complete"
 }
  

@@ -28,7 +28,7 @@ public:
   void setShouldConsiderWildcard(bool);
   void setShouldConsiderFreeHit(bool);
   void setCaptains(const std::shared_ptr<Player> &_captain, const std::shared_ptr<Player> &_viceCaptain);
-  std::shared_ptr<Changes> getChangesRequiredToFormNewTeam(std::vector<Player> &newTeam) const; // determines changes required to convert existing team to `newTeam`
+  std::shared_ptr<Changes> getChangesRequiredToFormNewTeam(const std::vector<Player> &newTeam) const; // determines changes required to convert existing team to `newTeam`
   std::vector<Player> getMergedTeamList() const;
 };
 
@@ -44,7 +44,7 @@ public:
   const std::vector<Player> toBuy;
   const std::vector<Player> newTeam;
   Changes() = delete;
-  Changes(std::vector<Player> &_toSell, std::vector<Player> &_toBuy, std::vector<Player> &_newTeam) : toSell(_toSell), toBuy(_toBuy), newTeam(_newTeam), captain(nullptr), viceCaptain(nullptr),
+  Changes(std::vector<Player> &_toSell, std::vector<Player> &_toBuy, const std::vector<Player> &_newTeam) : toSell(_toSell), toBuy(_toBuy), newTeam(_newTeam), captain(nullptr), viceCaptain(nullptr),
                                                                                                       useTripleCaptain(false), useBenchBoost(false){};
   ~Changes();
   void setSuggestedStartingLineUp(std::vector<Player> &);
