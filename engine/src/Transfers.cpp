@@ -1,4 +1,6 @@
 #include "Transfers.hpp"
+#include "Logger.hpp"
+#include "Analytics.hpp"
 #include <numeric>
 using namespace std;
 
@@ -7,7 +9,7 @@ namespace fantasypremierleague
 
 vector<PotentialSquad> chooseTopNSquads(const Constraints& constraints, const int n, Team &currentTeam){
     /*
-    TODO: actualy use this algo by calling this function in appropriate place
+    TODO: actually use this algo by calling this function in appropriate place
 
     //constraints by scenario //NEBUG: readTHis
         freeTransfer => Constraints(budget=B, numFreeTransfers = 1 or 2, numGameWeeksToConsider= DEFAULT);
@@ -37,7 +39,7 @@ class EnrichedSquad{ //TODO: optional consider relocating this
     EnrichedSquad(const PotentialSquad& squad_):squad(squad_){
         
         if(squad_.empty()){
-            cout<<"[ERROR] received an empty squad"<<endl;
+            error("[ERROR] received an empty squad");
         }else{
 
             totalFutureGameWeekScores = 0.0f;
@@ -82,7 +84,7 @@ class EnrichedSquad{ //TODO: optional consider relocating this
     
 };
 
-vector<PotentialSquad> getTopNSquads(const vector<PotentialSquad>& candidateSquads, const int n, Team &currentTeam, const Constraints& constraints){// TODO: test this!! important that order is correct
+vector<PotentialSquad> getTopNSquads(const vector<PotentialSquad>& candidateSquads, const int n, Team &currentTeam, const Constraints& constraints){// TODO [required]: test this!! important that order is correct
 
     EnrichedSquad currentSquad(currentTeam.getMergedTeamList());
 

@@ -55,7 +55,7 @@ bool shouldImplementTeamChanges(){
 
 void implementTeamChanges(std::shared_ptr<Team::Changes> suggestedTeamChanges){
     std::cout<<"implementing changes"<<std::endl;
-    //TODO: invoke call to python selenium script to implement desired changes
+    //TODO:[low priority] invoke call to python selenium script to implement desired changes
 };
 
 

@@ -16,7 +16,7 @@ namespace fantasypremierleague
 
 using Players = vector<Player>;
 using PotentialSquad = vector<Player>;
-using PlayersByPosition = std::unordered_map<PlayerPostion,Players>;//TODO: create hash for enum as key or mapenums to string or ints
+using PlayersByPosition = std::unordered_map<PlayerPostion,Players>;//TODO:[required?] create hash for enum as key or mapenums to string or ints
 using  GoalkeeperPairs = vector< std::pair<Player,Player> >;
 
 struct Constraints{
@@ -24,18 +24,6 @@ struct Constraints{
     const int numFreeTransfers;
     const int gameWeekHorizon;//numGameWeeksToConsider
     const int costPerNonFreeTransfer; // default value in settings which is -4
-};
-
-//TODO: optional: relocate this class if needed
-class FplAnalytics{ //TODO: impl
-
-    const Constraints constraints;
-    public:
-        FplAnalytics(const Constraints& constraints_): constraints(constraints_){};
-        Players getPrunedStrikers();//TODO: impl
-        Players getPrunedMidfielders();//TODO: impl
-        Players getPrunedDefenders();//TODO: impl
-        vector< std::pair<Player,Player> > getPrunedGoalkeeperPairs();//TODO: impl
 };
 
 vector<PotentialSquad> chooseTopNSquads(const Constraints& constraints, const int n, Team &currentTeam);

@@ -6,3 +6,11 @@ void info(const char* message){
 void warn(const char* message){
     std::cout<<"[WARNING] "<<message<<std::endl;
 }
+
+void error(const char* message){
+    std::cout<<"[ERROR] "<<message<<std::endl;
+}
+
+void error(const std::string& message){
+    std::cout<<"[ERROR] "<<message<<std::endl;
+}

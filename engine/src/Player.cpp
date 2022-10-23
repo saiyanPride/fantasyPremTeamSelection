@@ -32,7 +32,7 @@ bool Player::operator()(const Player &player1, const Player &player2) const
 
 float Player::getNextGameWeekScore() const
 {
-    return nextGameweekScore; //TODO: deprecate this member, and instead `return predictedFutureGameWeekScores[0]`
+    return nextGameweekScore; //TODO: [low priority] deprecate this member, and instead `return predictedFutureGameWeekScores[0]`
 }
 
 const PlayerPostion &Player::getPosition() const
