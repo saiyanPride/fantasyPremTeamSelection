@@ -1,5 +1,5 @@
 import json
-
+import numpy as np
 
 class Status(object):
     def __init__(self, isWildCardAvailable, isFreehitAvailable, isTripleCaptainAvailable, isBenchBoostAvailable, noFreeTransfersAvailable, bankBalance, gameweekNo):
@@ -28,27 +28,69 @@ class Status(object):
 
 
 class PlayerData(object):
-    # create default constructor
-    def __init__(self):
+
+    def __init__(self, club, club_id, name, position, value, form, minutesPlayed, goals, assists, bonus, cleansheets):
+        self.club = club
+        self.club_id: int = club_id
+        self.name = name
+        self.position = position
+        self.value = value
+        self.form = form
+        self.minutesPlayed = minutesPlayed
+        self.goals = goals
+        self.assists = assists
+        self.bonus = bonus
+        self.cleansheets = cleansheets
+        self.predicted_points = []
         self.avg_predicted_points = None
 
+    def predict_gameWeek_points(self, n):
+        """
+        Predicts the player's scores for the next n gameweeks
+        """
+        if self.position == 'DEF':
+            set_predicted_points_for_defender(self, n) #TODO: NEBUG: implement this function
+        elif self.position == 'MID':
+            set_predicted_points_for_midfielder(self, n) #TODO: NEBUG: implement this function
+        elif self.position == 'FWD':
+            set_predicted_points_for_forward(self, n) #TODO: NEBUG: implement this function
+        elif self.position == 'GK':
+            set_predicted_points_for_goalkeeper(self, n) #TODO: NEBUG: implement this function
+        else:
+            raise Exception(f"Player has invalid position ({self.position}), cannot predict points")
 
-    # def __init__(self, club, name, position, value, form, minutesPlayed, club_id):
-    #     self.club = club
-    #     self.name = name
-    #     self.position = position
-    #     self.value = value
-    #     self.form = form
-    #     self.minutesPlayed = minutesPlayed
-    #     self.goals = ''
-    #     self.assists = ''
-    #     self.bonus = ''
-    #     self.cleansheets = ''
-    #     self.gameweekScores = []
-    #     self.club_id = club_id
-    #     self.avg_predicted_points = None
 
-    def getGameweekScoreEstimates(self, gameweekDifficultyList, currentGameWeekNo):
+    def set_predicted_points_for_forward(self, n):
+        """
+        Sets the predicted points for a forward
+
+        The total score is composed of:
+            points_contribution_from_minutes
+            points_contribution_from_goals 
+            points_contribution_from_assists 
+            points_contribution_from_bonus 
+        """
+
+        # create numpy array of length n
+        points_contribution_from_goals  = np.zeros(n) #todo: NEBUG: implement this using fixture difficulty rating, average goals scored, and players form
+        points_contribution_from_minutes = np.zeros(n)
+        points_contribution_from_assists = np.zeros(n)
+        points_contribution_from_bonus = np.zeros(n)
+
+        # self.predicted_points is the sum of the above 4 arrays
+        self.predicted_points = points_contribution_from_minutes + points_contribution_from_goals + points_contribution_from_assists + points_contribution_from_bonus
+        
+        # self.predicted_points is converted to list of doubles
+        self.predicted_points = self.predicted_points.tolist()
+
+        # set self.avg_predicted_points to be average of self.predicted_points
+        self.avg_predicted_points = sum(self.predicted_points) / len(self.predicted_points)
+
+        
+
+
+
+    def getGameweekScoreEstimates(self, gameweekDifficultyList, currentGameWeekNo): # TODO NEBUG: DELETE THIS FUNCTION
         """
         Calculates a score out of 100 for the player
         This score gives an indication of the players chances of obtaining large fantasy points during `currentGameWeekNo`
