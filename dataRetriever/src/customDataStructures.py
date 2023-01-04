@@ -28,18 +28,25 @@ class Status(object):
 
 
 class PlayerData(object):
-    def __init__(self, club, name, position, value, form, minutesPlayed):
-        self.club = club
-        self.name = name
-        self.position = position
-        self.value = value
-        self.form = form
-        self.minutesPlayed = minutesPlayed
-        self.goals = ''
-        self.assists = ''
-        self.bonus = ''
-        self.cleansheets = ''
-        self.gameweekScores = []
+    # create default constructor
+    def __init__(self):
+        self.avg_predicted_points = None
+
+
+    # def __init__(self, club, name, position, value, form, minutesPlayed, club_id):
+    #     self.club = club
+    #     self.name = name
+    #     self.position = position
+    #     self.value = value
+    #     self.form = form
+    #     self.minutesPlayed = minutesPlayed
+    #     self.goals = ''
+    #     self.assists = ''
+    #     self.bonus = ''
+    #     self.cleansheets = ''
+    #     self.gameweekScores = []
+    #     self.club_id = club_id
+    #     self.avg_predicted_points = None
 
     def getGameweekScoreEstimates(self, gameweekDifficultyList, currentGameWeekNo):
         """
