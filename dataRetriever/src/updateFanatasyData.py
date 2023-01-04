@@ -27,7 +27,8 @@ def main():
     password = raw_input('Enter your password: ')
     email = raw_input('Enter your login email address: ')
     login(email, password)
-    status = getStatus()
+    # nebug: above this line should be deleted
+    status = getStatus() # NEBUG: should be API call
     playersMap = predictPlayerScores(status.gameweekNo)
     updateDatabaseWithPlayers(playersMap)
     updateCurrentTeam()
@@ -241,7 +242,7 @@ def getStatus():
     statusJson = Status(wildCardAvailable, freehitAvailable, tripleCaptainAvailable,
                         benchBoostAvailable, noFreeTransfers, bankBalance, gameweekNo).getJson()
     writeToFile('status.json', statusJson)
-    return status
+    return status #NEBUG: delete this line
 
 
 def getPlayerStatistics(playerDataMap):
@@ -288,7 +289,7 @@ def predictPlayerScores(gameweekNo):
     predict player scores for `gameweekNo` and return dictionary of player objects
     """
     playerDataMap = {}  # key is playerName-Club-Position, value is Player object
-    getPlayerStatistics(playerDataMap)
+    getPlayerStatistics(playerDataMap) #NEBUG: replace with API call
     calculatePlayerScores(playerDataMap, gameweekNo)
     return playerDataMap
 
