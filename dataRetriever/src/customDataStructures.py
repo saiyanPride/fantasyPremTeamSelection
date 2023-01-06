@@ -49,16 +49,25 @@ class PlayerData(object):
         Predicts the player's scores for the next n gameweeks
         """
         if self.position == 'DEF':
-            set_predicted_points_for_defender(self, n) #TODO: NEBUG: implement this function
+            self.set_predicted_points_for_defender(n) #TODO: NEBUG: implement this function
         elif self.position == 'MID':
-            set_predicted_points_for_midfielder(self, n) #TODO: NEBUG: implement this function
+            self.set_predicted_points_for_midfielder(n) #TODO: NEBUG: implement this function
         elif self.position == 'FWD':
-            set_predicted_points_for_forward(self, n) #TODO: NEBUG: implement this function
+            self.set_predicted_points_for_forward(n) #TODO: NEBUG: implement this function
         elif self.position == 'GK':
-            set_predicted_points_for_goalkeeper(self, n) #TODO: NEBUG: implement this function
+            self.set_predicted_points_for_goalkeeper(n) #TODO: NEBUG: implement this function
         else:
             raise Exception(f"Player has invalid position ({self.position}), cannot predict points")
 
+
+    def set_predicted_points_for_defender(self, n):
+        return None #  TODO: NEBUG: implement this function
+
+    def set_predicted_points_for_midfielder(self, n):
+        return None #TODO: NEBUG: implement this function
+
+    def set_predicted_points_for_goalkeeper(self, n):
+        return None #TOOD: NEBUG: implement this function
 
     def set_predicted_points_for_forward(self, n):
         """
@@ -70,7 +79,6 @@ class PlayerData(object):
             points_contribution_from_assists 
             points_contribution_from_bonus 
         """
-
         # create numpy array of length n
         points_contribution_from_goals  = np.zeros(n) #todo: NEBUG: implement this using fixture difficulty rating, average goals scored, and players form
         points_contribution_from_minutes = np.zeros(n)

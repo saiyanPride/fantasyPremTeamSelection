@@ -12,10 +12,13 @@ from customDataStructures import PlayerData
 async def main():
     async with aiohttp.ClientSession() as session:
         fpl = FPL(session)
-        players = await fpl.get_players()
-        teams = (
-            await fpl.get_teams()
-        )  # TODO: NEBUG: make sure you are using ayncio properly
+        # create task to get players
+        players_task = asyncio.create_task(fpl.get_players())
+        # create task to get teams
+        teams_task = asyncio.create_task(fpl.get_teams())
+
+        # wait for both tasks to complete
+        players, teams = await asyncio.gather(players_task, teams_task)
 
     team_id_to_team_name = {team.id: team.name for team in teams}
 
