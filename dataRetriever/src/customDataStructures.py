@@ -1,5 +1,6 @@
 import json
 import numpy as np
+from settings import FIXTURE_DIFFICULTY_RATINGS_FILEPATH
 
 class Status(object):
     def __init__(self, isWildCardAvailable, isFreehitAvailable, isTripleCaptainAvailable, isBenchBoostAvailable, noFreeTransfersAvailable, bankBalance, gameweekNo):
@@ -48,6 +49,17 @@ class PlayerData(object):
         """
         Predicts the player's scores for the next n gameweeks
         """
+
+        # get fixture difficulty rating from FIXTURE_DIFFICULTY_RATINGS_FILEPATH json file
+        with open(FIXTURE_DIFFICULTY_RATINGS_FILEPATH, 'r') as f:
+            fixture_dfficulty_rating_by_gameweek = json.load(f)
+
+
+        # get fixture difficulty rating for the next n gameweeks for this player's club
+
+
+
+
         if self.position == 'DEF':
             self.set_predicted_points_for_defender(n) #TODO: NEBUG: implement this function
         elif self.position == 'MID':

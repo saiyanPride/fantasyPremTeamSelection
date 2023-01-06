@@ -10,7 +10,7 @@ def warn(message):
     print("[WARN] %s" % message)
 
 
-def writeToFile(Name, Body):
-    statusFile = open('status.json', 'w')
-    statusFile.write(statusJson)
-    statusFile.close()
+# def writeToFile(Name, Body):
+#     statusFile = open('status.json', 'w')
+#     statusFile.write(statusJson)
+#     statusFile.close()
