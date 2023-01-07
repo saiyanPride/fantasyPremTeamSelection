@@ -1,7 +1,8 @@
 import json
 import numpy as np
-from settings import FIXTURE_DIFFICULTY_RATINGS_FILEPATH, MAX_GAMEWEEKS
-
+from points_predictor import Predict
+from settings import FIXTURE_DIFFICULTY_RATINGS_FILEPATH, MAX_GAMEWEEKS,POINTS_PER_GOAL_FORWARD
+from fpl.models.player import Player as FPLPlayer
 
 class Status(object):
     def __init__(
@@ -53,7 +54,8 @@ class PlayerData(object):
         bonus,
         cleansheets,
         start_gameweek: int,
-        number_of_gameweeks: int
+        number_of_gameweeks: int,
+        fpl_player: FPLPlayer,
     ):
         self.club_name = club_name
         self.club_id: int = club_id
@@ -68,12 +70,15 @@ class PlayerData(object):
         self.cleansheets = cleansheets
         self.start_game_week: int = start_gameweek
         self.number_of_gameweeks: int = number_of_gameweeks
+        self.fpl_player: FPLPlayer = fpl_player
 
         self.fixture_difficulty_ratings = self._get_fixture_diffiulty_ratings_from_file(start_gameweek, number_of_gameweeks)
         self.predicted_points = self._get_predicted_gameweek_points()
         self.avg_predicted_points = None
 
-    def _get_fixture_diffiulty_ratings_from_file(self,start_gameweek: int, n: int):
+    def _get_fixture_diffiulty_ratings_from_file(self,start_gameweek: int, n: int)->list[dict[str, int]]:
+        assert n >3, "n must be greater than 3"
+        
         # get fixture difficulty rating from FIXTURE_DIFFICULTY_RATINGS_FILEPATH json file
         with open(FIXTURE_DIFFICULTY_RATINGS_FILEPATH, "r") as f:
             fixture_dfficulty_rating_by_gameweek = json.load(f)
@@ -81,7 +86,7 @@ class PlayerData(object):
         # TODO: FUTURE: improve to use fixture difficulty based on player's position (and if possible based on the player himself as well)
 
         # get fixture difficulty rating for the next n gameweeks for this player's club
-        end_gameweek = min(start_gameweek + n, MAX_GAMEWEEKS)
+        end_gameweek = min(start_gameweek + n-1, MAX_GAMEWEEKS)
 
         fixture_difficulty_ratings: list[dict[str, int]] = [
             fixture_dfficulty_rating_by_gameweek[str(gameweek)][self.club_name]
@@ -121,16 +126,14 @@ class PlayerData(object):
             points_contribution_from_assists
             points_contribution_from_bonus
         """
+
+        #TODO NEBUG: also factor in the likelihood player will get 60mins (if really injured points is 0), if player won't play just return 0
         # create numpy array of length self.number_of_gameweeks
         n = self.number_of_gameweeks
-        points_contribution_from_goals = np.zeros(
-            n
-        )  # todo: NEBUG: implement this using fixture difficulty rating, average goals scored, and players form
+        points_contribution_from_goals = POINTS_PER_GOAL_FORWARD*Predict.compute_expected_goals_scored(player=self,number_of_gameweeks=n)
         points_contribution_from_minutes = np.zeros(n)
         points_contribution_from_assists = np.zeros(n)
         points_contribution_from_bonus = np.zeros(n)
-
-        #TODO NEBUG: also factor in the likelihood player will get 60mins (if really injured points is 0)
 
         # predicted_points is the sum of the above 4 numpy arrays
         predicted_points = (
