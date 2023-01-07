@@ -9,7 +9,7 @@ from fpl.models.player import Player as FPLPlayer
 
 from customDataStructures import PlayerData
 from utility import warn
-from settings import DEFAULT_NUMBER_OF_GAMWEEKS_TO_PREDICT, FIXTURE_DIFFICULTY_RATINGS_FILEPATH
+from settings import DEFAULT_NUMBER_OF_GAMWEEKS_TO_PREDICT, FIXTURE_DIFFICULTY_RATINGS_FILEPATH, MAX_GAMEWEEKS
 
 
 async def initialise():
@@ -30,17 +30,17 @@ async def initialise():
         fixture_difficulty_ratings_task = asyncio.create_task(
             get_and_persist_fixture_difficulty_ratings(fpl_client=fpl_client)
         )
-
+        
         # wait for both tasks to complete
         players, fixture_difficulty_ratings_by_gameweek = await asyncio.gather(
             players_task, fixture_difficulty_ratings_task
         )
 
-    return players, teams, fixture_difficulty_ratings_by_gameweek
+    return players, teams, fixture_difficulty_ratings_by_gameweek,fpl_client.current_gameweek
 
 
 async def main():
-    players, teams, fixture_difficulty_ratings_by_gameweek = await initialise()
+    players, teams, fixture_difficulty_ratings_by_gameweek,current_gameweek = await initialise()
 
     Display.display_fixture_difficulty_ratings(fixture_difficulty_ratings_by_gameweek)
 
@@ -58,7 +58,7 @@ async def main():
             warn(
                 f"Using default fixture difficulty ratings!!"
             )
-    player_analytics = compute_player_analytics_for_next_n_gameweeks(players, n=5)
+    player_analytics = compute_player_analytics_for_next_n_gameweeks(players, current_gameweek=current_gameweek, n=5)
 
     Display.display_player_analytics(player_analytics, TEAM_ID_TO_TEAM_NAME)
 
@@ -89,7 +89,7 @@ async def get_and_persist_fixture_difficulty_ratings(
 
     # create task to get fixtures for gameweeks between current_gameweek and min(current_gameweek+n, 38)
     fixtures_tasks = []
-    for gameweek in range(current_gameweek, min(current_gameweek + n + 1, 39)):
+    for gameweek in range(current_gameweek, min(current_gameweek + n + 1, MAX_GAMEWEEKS)):
         fixtures_tasks.append(
             asyncio.create_task(fpl_client.get_fixtures_by_gameweek(gameweek))
         )
@@ -99,7 +99,7 @@ async def get_and_persist_fixture_difficulty_ratings(
 
     # for each gameweek, get the fixture difficulty ratings
     for gameweek, fixtures in zip(
-        range(current_gameweek, min(current_gameweek + n + 1, 39)), fixtures_by_gameweek
+        range(current_gameweek, min(current_gameweek + n + 1, MAX_GAMEWEEKS)), fixtures_by_gameweek
     ):
         fixture_difficulty_ratings_by_gameweek[gameweek] = {}
         # for each fixture, get the fixture difficulty rating
@@ -245,7 +245,7 @@ class Display:
 
 
 def compute_player_analytics_for_next_n_gameweeks(
-    players: list[FPLPlayer], n: int
+    players: list[FPLPlayer], current_gameweek: int, n: int
 ) -> list[PlayerData]:
     """
     n: the number of gameweeks to predict points for
@@ -255,7 +255,7 @@ def compute_player_analytics_for_next_n_gameweeks(
     for player in players:
         player_data = PlayerData(
             name=player.web_name,
-            club=TEAM_ID_TO_TEAM_NAME[player.team],
+            club_name=TEAM_ID_TO_TEAM_NAME[player.team],
             club_id=player.team,
             position=convert_element_type_to_position(player.element_type),
             value=player.now_cost / 10,
@@ -266,7 +266,7 @@ def compute_player_analytics_for_next_n_gameweeks(
             bonus=player.bonus,
             cleansheets=player.clean_sheets,
         )
-        player_data.predict_gameWeek_points(n)
+        player_data.predict_gameWeek_points(current_gameweek, n)
         player_analytics.append(player_data)
 
     return player_analytics
