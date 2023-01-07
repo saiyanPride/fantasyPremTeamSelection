@@ -266,8 +266,9 @@ def compute_player_analytics_for_next_n_gameweeks(
             assists=player.assists,
             bonus=player.bonus,
             cleansheets=player.clean_sheets,
+            start_gameweek=current_gameweek,
+            number_of_gameweeks=n,
         )
-        player_data.predict_gameWeek_points(current_gameweek, n)
         player_analytics.append(player_data)
 
     return player_analytics

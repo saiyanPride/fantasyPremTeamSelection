@@ -52,6 +52,8 @@ class PlayerData(object):
         assists,
         bonus,
         cleansheets,
+        start_gameweek: int,
+        number_of_gameweeks: int
     ):
         self.club_name = club_name
         self.club_id: int = club_id
@@ -64,14 +66,14 @@ class PlayerData(object):
         self.assists = assists
         self.bonus = bonus
         self.cleansheets = cleansheets
-        self.predicted_points = []
+        self.start_game_week: int = start_gameweek
+        self.number_of_gameweeks: int = number_of_gameweeks
+
+        self.fixture_difficulty_ratings = self._get_fixture_diffiulty_ratings_from_file(start_gameweek, number_of_gameweeks)
+        self.predicted_points = self._get_predicted_gameweek_points()
         self.avg_predicted_points = None
 
-    def predict_gameWeek_points(self, start_gameweek: int, n: int):
-        """
-        Predicts the player's scores for the next n gameweeks
-        """
-
+    def _get_fixture_diffiulty_ratings_from_file(self,start_gameweek: int, n: int):
         # get fixture difficulty rating from FIXTURE_DIFFICULTY_RATINGS_FILEPATH json file
         with open(FIXTURE_DIFFICULTY_RATINGS_FILEPATH, "r") as f:
             fixture_dfficulty_rating_by_gameweek = json.load(f)
@@ -80,43 +82,35 @@ class PlayerData(object):
 
         # get fixture difficulty rating for the next n gameweeks for this player's club
         end_gameweek = min(start_gameweek + n, MAX_GAMEWEEKS)
+
         fixture_difficulty_ratings: list[dict[str, int]] = [
             fixture_dfficulty_rating_by_gameweek[str(gameweek)][self.club_name]
             for gameweek in range(start_gameweek, end_gameweek+1)
         ]
 
+        return fixture_difficulty_ratings
+
+    def _get_predicted_gameweek_points(self):
+        """
+        Predicts the player's scores for the next n gameweeks
+        """
+
         # set predicted points for this player based on position
         if self.position == "DEF":
-            self.set_predicted_points_for_defender(n, fixture_difficulty_ratings)
+            return self._get_predicted_points_for_defender()
         elif self.position == "MID":
-            self.set_predicted_points_for_midfielder(n, fixture_difficulty_ratings)
+            return self._get_predicted_points_for_midfielder()
         elif self.position == "FWD":
-            self.set_predicted_points_for_forward(n, fixture_difficulty_ratings)
+            return self._get_predicted_points_for_forward()
         elif self.position == "GK":
-            self.set_predicted_points_for_goalkeeper(n, fixture_difficulty_ratings)
+            return self._get_predicted_points_for_goalkeeper()
         else:
             raise Exception(
                 f"Player has invalid position ({self.position}), cannot predict points"
             )
 
-    def set_predicted_points_for_defender(
-        self, n, fixture_difficulty_ratings: list[dict[str, int]]
-    ) -> list[float]:
-        """Returns a list of predicted points for the next n gameweeks for a defender"""
-        return None  #  TODO: NEBUG: implement this function
-
-    def set_predicted_points_for_midfielder(
-        self, n, fixture_difficulty_ratings: list[dict[str, int]]
-    ):
-        return None  # TODO: NEBUG: implement this function
-
-    def set_predicted_points_for_goalkeeper(
-        self, n, fixture_difficulty_ratings: list[dict[str, int]]
-    ):
-        return None  # TOOD: NEBUG: implement this function
-
-    def set_predicted_points_for_forward(
-        self, n, fixture_difficulty_ratings: list[dict[str, int]]
+    def _get_predicted_points_for_forward(
+        self,
     ):
         """
         Sets the predicted points for a forward
@@ -127,7 +121,8 @@ class PlayerData(object):
             points_contribution_from_assists
             points_contribution_from_bonus
         """
-        # create numpy array of length n
+        # create numpy array of length self.number_of_gameweeks
+        n = self.number_of_gameweeks
         points_contribution_from_goals = np.zeros(
             n
         )  # todo: NEBUG: implement this using fixture difficulty rating, average goals scored, and players form
@@ -135,21 +130,36 @@ class PlayerData(object):
         points_contribution_from_assists = np.zeros(n)
         points_contribution_from_bonus = np.zeros(n)
 
-        # self.predicted_points is the sum of the above 4 arrays
-        self.predicted_points = (
-            points_contribution_from_minutes
-            + points_contribution_from_goals
+        #TODO NEBUG: also factor in the likelihood player will get 60mins (if really injured points is 0)
+
+        # predicted_points is the sum of the above 4 numpy arrays
+        predicted_points = (
+            points_contribution_from_goals
+            + points_contribution_from_minutes
             + points_contribution_from_assists
             + points_contribution_from_bonus
         )
 
-        # self.predicted_points is converted to list of doubles
-        self.predicted_points = self.predicted_points.tolist()
+        # get average of numpy array predicted_points
+        self.avg_predicted_points = np.mean(predicted_points)
 
-        # set self.avg_predicted_points to be average of self.predicted_points
-        self.avg_predicted_points = sum(self.predicted_points) / len(
-            self.predicted_points
-        )
+        return predicted_points.tolist()
+
+    def _get_predicted_points_for_midfielder(
+        self, 
+    ):
+        return None  # TODO: NEBUG: implement this function
+    
+    def _get_predicted_points_for_defender(
+        self, 
+    ) -> list[float]:
+        """Returns a list of predicted points for the next n gameweeks for a defender"""
+        return None  #  TODO: NEBUG: implement this function
+
+    def _get_predicted_points_for_goalkeeper(
+        self, 
+    ):
+        return None  # TOOD: NEBUG: implement this function
 
     def getGameweekScoreEstimates(
         self, gameweekDifficultyList, currentGameWeekNo
