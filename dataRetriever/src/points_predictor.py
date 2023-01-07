@@ -33,32 +33,28 @@ class Predict:
 
 
     @staticmethod
-    def compute_expected_goals_scored_from_fixture_difficulty_rating(
+    def predict_num_goals_scored_from_fixture_difficulty_rating(
         player,
         fixture_difficulty_rating: float
     )-> Optional[float]:
         """
         Computes the points contribution from goals scored
 
-        uses expected_goals and gameweek difficulty to decide
-
-        for easy gw_diff => 50% increase in goals
-        for moderate gw_diff => expected goals
-        for hard gw_diff => 50% decrease in goals
+        uses expected_goals_per_90 and gameweek difficulty to decide
         """
-        expected_goals = float(player.fpl_player.expected_goals)
+        expected_goals_per_90 = float(player.fpl_player.expected_goals_per_90)
         if get_gameweek_difficulty_category(fixture_difficulty_rating) == GameWeekDifficultyCategory.EASY:
-            return 1.5*expected_goals
+            return 1.5*expected_goals_per_90 #NEBUG: tune this FACTOR by seeing what it predicts for top & not so top players
         elif get_gameweek_difficulty_category(fixture_difficulty_rating) == GameWeekDifficultyCategory.MODERATE:
-            return expected_goals
+            return 1*expected_goals_per_90 #NEBUG: tune this FACTOR by seeing what it predicts for top & not so top players
         elif get_gameweek_difficulty_category(fixture_difficulty_rating) == GameWeekDifficultyCategory.HARD:
-            return expected_goals
+            return 0.75*expected_goals_per_90 #NEBUG: tune this FACTOR by seeing what it predicts for top & not so top players
         else:
             warn(f"Invalid gameweek difficulty rating={fixture_difficulty_rating} passed")
 
             
     @staticmethod
-    def compute_expected_goals_scored(
+    def predict_number_of_goals_scored(
         player,
         number_of_gameweeks: int,
     )-> np.ndarray:
@@ -72,11 +68,7 @@ class Predict:
             total_expected_goals_for_gameweek = 0
             
             for _,fixture_difficulty_rating in gameweek_fixture_difficulty_rating.items():
-                total_expected_goals_for_gameweek += Predict.compute_expected_goals_scored_from_fixture_difficulty_rating(player, float(fixture_difficulty_rating))
-
-                print("*****",player.name, f"num_gw={len(gameweek_fixture_difficulty_rating)}",f"xg={player.fpl_player.expected_goals}",f"xa={player.fpl_player.expected_assists}", i,total_expected_goals_for_gameweek) # NEBUG: print player details to help debug why predicted points are so high
-            # append total_expected_goals_for_gameweek to expected_goals_for_gameweeks
-            # round up the float total_expected_goals_for_gameweek, to 1 decimal place
+                total_expected_goals_for_gameweek += Predict.predict_num_goals_scored_from_fixture_difficulty_rating(player, float(fixture_difficulty_rating))
             expected_goals_for_gameweeks[i] = round(total_expected_goals_for_gameweek, 1)
 
         return expected_goals_for_gameweeks

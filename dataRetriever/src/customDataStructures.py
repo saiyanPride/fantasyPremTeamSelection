@@ -130,7 +130,7 @@ class PlayerData(object):
         #TODO NEBUG: also factor in the likelihood player will get 60mins (if really injured points is 0), if player won't play just return 0
         # create numpy array of length self.number_of_gameweeks
         n = self.number_of_gameweeks
-        points_contribution_from_goals = POINTS_PER_GOAL_FORWARD*Predict.compute_expected_goals_scored(player=self,number_of_gameweeks=n)
+        points_contribution_from_goals = POINTS_PER_GOAL_FORWARD*Predict.predict_number_of_goals_scored(player=self,number_of_gameweeks=n)
         points_contribution_from_minutes = np.zeros(n)
         points_contribution_from_assists = np.zeros(n)
         points_contribution_from_bonus = np.zeros(n)
