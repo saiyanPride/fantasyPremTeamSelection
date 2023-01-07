@@ -16,6 +16,20 @@ async def initialise():
     async with aiohttp.ClientSession() as session:
         fpl_client = FPL(session)
 
+        global CURRENT_GAMEWEEK
+        CURRENT_GAMEWEEK = fpl_client.current_gameweek
+
+        user_input = input(
+            f"Do you want to continue using current gameweek = {CURRENT_GAMEWEEK}? (Y/N): "
+        )
+        if user_input.lower() != "y":
+            # ask user to input the gameweek number to use
+            CURRENT_GAMEWEEK = int(input("Please enter the gameweek number to use: "))
+            warn(
+                f"Using gameweek {CURRENT_GAMEWEEK} instead of current gameweek {fpl_client.current_gameweek}"
+            )
+
+
         # get teams (intentionally wait until complete as other methods need this info)
         teams = await fpl_client.get_teams()
         global TEAM_ID_TO_TEAM_NAME
@@ -28,7 +42,7 @@ async def initialise():
 
         # create to get fixture difficulty ratings
         fixture_difficulty_ratings_task = asyncio.create_task(
-            get_and_persist_fixture_difficulty_ratings(fpl_client=fpl_client)
+            get_and_persist_fixture_difficulty_ratings(fpl_client=fpl_client, current_gameweek = CURRENT_GAMEWEEK)
         )
         
         # wait for both tasks to complete
@@ -36,11 +50,11 @@ async def initialise():
             players_task, fixture_difficulty_ratings_task
         )
 
-    return players, teams, fixture_difficulty_ratings_by_gameweek,fpl_client.current_gameweek
+    return players, teams, fixture_difficulty_ratings_by_gameweek, CURRENT_GAMEWEEK
 
 
 async def main():
-    players, teams, fixture_difficulty_ratings_by_gameweek,current_gameweek = await initialise()
+    players, teams, fixture_difficulty_ratings_by_gameweek, current_gameweek = await initialise()
 
     Display.display_fixture_difficulty_ratings(fixture_difficulty_ratings_by_gameweek)
 
@@ -58,38 +72,25 @@ async def main():
             warn(
                 f"Using default fixture difficulty ratings!!"
             )
-    player_analytics = compute_player_analytics_for_next_n_gameweeks(players, current_gameweek=current_gameweek, n=5)
+    player_analytics = compute_player_analytics_for_next_n_gameweeks(players, current_gameweek, n=5)
 
     Display.display_player_analytics(player_analytics, TEAM_ID_TO_TEAM_NAME)
 
 
 async def get_and_persist_fixture_difficulty_ratings(
-    fpl_client: FPL, n=DEFAULT_NUMBER_OF_GAMWEEKS_TO_PREDICT
+    fpl_client: FPL, current_gameweek, n=DEFAULT_NUMBER_OF_GAMWEEKS_TO_PREDICT
 ):
     # TODO: IMPROVEMENT:  use a more sophisticated method of determining the fixture difficulty ratings
     """
     Gets the fixture difficulty ratings for the next n gameweeks
     Note that a gameweek can have >=1 fixtures
     """
-    # get current gameweek from fpl_client
-    current_gameweek = fpl_client.current_gameweek
-
-    user_input = input(
-        f"Do you want to continue using current gameweek = {current_gameweek}? (Y/N): "
-    )
-    if user_input.lower() != "y":
-        # ask user to input the gameweek number to use
-        current_gameweek = int(input("Please enter the gameweek number to use: "))
-        warn(
-            f"Using gameweek {current_gameweek} instead of current gameweek {fpl_client.current_gameweek}"
-        )
-
     # get fixture difficulty ratings for the next n gameweeks
     fixture_difficulty_ratings_by_gameweek = {}
 
     # create task to get fixtures for gameweeks between current_gameweek and min(current_gameweek+n, 38)
     fixtures_tasks = []
-    for gameweek in range(current_gameweek, min(current_gameweek + n + 1, MAX_GAMEWEEKS)):
+    for gameweek in range(current_gameweek, min(current_gameweek + n + 1, MAX_GAMEWEEKS+1)):
         fixtures_tasks.append(
             asyncio.create_task(fpl_client.get_fixtures_by_gameweek(gameweek))
         )
@@ -99,7 +100,7 @@ async def get_and_persist_fixture_difficulty_ratings(
 
     # for each gameweek, get the fixture difficulty ratings
     for gameweek, fixtures in zip(
-        range(current_gameweek, min(current_gameweek + n + 1, MAX_GAMEWEEKS)), fixtures_by_gameweek
+        range(current_gameweek, min(current_gameweek + n + 1, MAX_GAMEWEEKS+1)), fixtures_by_gameweek
     ):
         fixture_difficulty_ratings_by_gameweek[gameweek] = {}
         # for each fixture, get the fixture difficulty rating
