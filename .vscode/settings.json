@@ -83,6 +83,23 @@
         "streambuf": "cpp",
         "string_view": "cpp",
         "__memory": "cpp",
-        "filesystem": "cpp"
-    }
+        "filesystem": "cpp",
+        "any": "cpp",
+        "cfenv": "cpp",
+        "charconv": "cpp",
+        "cinttypes": "cpp",
+        "clocale": "cpp",
+        "codecvt": "cpp",
+        "compare": "cpp",
+        "condition_variable": "cpp",
+        "csetjmp": "cpp",
+        "csignal": "cpp",
+        "coroutine": "cpp",
+        "scoped_allocator": "cpp",
+        "shared_mutex": "cpp",
+        "span": "cpp",
+        "strstream": "cpp",
+        "variant": "cpp"
+    },
+    "python.formatting.provider": "black"
 }

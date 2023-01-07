@@ -14,9 +14,9 @@ class FplAnalytics{ //TODO: impl
         Players getPrunedStrikers();//TODO: impl
         Players getPrunedMidfielders();//TODO: impl
         Players getPrunedDefenders();//TODO: impl
-        vector< std::pair<Player,Player> > getPrunedGoalkeeperPairs();//TODO: impl
+        vector< std::pair<Player,Player> > getPrunedGoalkeeperPairs();
     private:
-        Players getPrunedGoalkeepers();//TODO: impl
+        Players getPrunedGoalkeepers();
 };
 
 

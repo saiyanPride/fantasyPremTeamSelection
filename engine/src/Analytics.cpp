@@ -5,19 +5,31 @@
 
 namespace fantasypremierleague
 {
+
+//NEBUG TODO: impl
+/*
+Returns an unordered list of goalkeepers that are worth considering for selection
+
+For example goalkeepers that don't play at all, shouldn't be considered
+
+*/
+Players FplAnalytics::getPrunedGoalkeepers(){
+    //TODO: simple database select statement
+}
 /*
 Returns a sequence of goalkeeper pairs ordered by score in descending order
 The ith pairing should be considered a better choice than the (i+1)th pairing
 
-    1) Approach 1: generate combinations but generate combinations of higher scoring pairs before lower scoring pairs
+    Approach: 
+    generate combinations of every possible goalkeeper pair, but generate combinations of higher scoring pairs before lower scoring pairs
     # GIVEN
     goalkeepers = {G1,G2,G3,G4 ... , Gn}
      
-    result should be ranked pairs in a way that encapsualtes our desire to have pairs that complement each other
+    result should be ranked pairs in a way that encapsulates our desire to have pairs that complement each other
     
     result will look like: [ (G1,G2), (G1,G3), (G2,G3),(G1,G4 )...]
 
-    Example Pair predicted scores for next 3 Gameweeks
+    Example Pair and their predicted scores for next 3 Gameweeks
 
     Pair1
     G1: 5   5   5   5   5

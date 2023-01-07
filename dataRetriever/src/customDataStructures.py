@@ -101,7 +101,8 @@ class PlayerData(object):
 
     def set_predicted_points_for_defender(
         self, n, fixture_difficulty_ratings: list[dict[str, int]]
-    ):
+    ) -> list[float]:
+        """Returns a list of predicted points for the next n gameweeks for a defender"""
         return None  #  TODO: NEBUG: implement this function
 
     def set_predicted_points_for_midfielder(
