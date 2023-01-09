@@ -1,4 +1,3 @@
-
 from enum import Enum
 from logging import warn
 from typing import Optional
@@ -10,18 +9,23 @@ class GameWeekDifficultyCategory(str, Enum):
     MODERATE = "MODERATE"
     HARD = "HARD"
 
-def get_gameweek_difficulty_category(gameweek_difficulty:float) -> GameWeekDifficultyCategory:
 
-    if gameweek_difficulty >=1 and gameweek_difficulty <= 2.5:
+def get_gameweek_difficulty_category(
+    gameweek_difficulty: float,
+) -> GameWeekDifficultyCategory:
+
+    if gameweek_difficulty >= 1 and gameweek_difficulty <= 2.5:
         return GameWeekDifficultyCategory.EASY
-    elif gameweek_difficulty >2.5 and gameweek_difficulty <= 3.5:
+    elif gameweek_difficulty > 2.5 and gameweek_difficulty <= 3.5:
         return GameWeekDifficultyCategory.MODERATE
-    elif gameweek_difficulty >3.5 and gameweek_difficulty <= 5:
+    elif gameweek_difficulty > 3.5 and gameweek_difficulty <= 5:
         return GameWeekDifficultyCategory.HARD
     else:
         raise ValueError("gameweek difficulty must be a number between 1 and 5")
+
+
 class Predict:
-    
+
     # nested class that contains prediction results for goals, assists, bonus, minutes played, etc
     class PredictedAnalytics:
         def __init__(
@@ -51,111 +55,170 @@ class Predict:
             self.red_cards = red_cards
             self.shots_saved = shots_saved
             self.yellow_cards = yellow_cards
-        
 
     @staticmethod
     def predict_num_clean_sheets_from_fixture_difficulty_rating(
-        player,
-        fixture_difficulty_rating: float
-    )-> Optional[float]:
+        player, fixture_difficulty_rating: float
+    ) -> Optional[float]:
         """
         Computes the points contribution from clean sheets
 
         uses expected_clean_sheets_per_90 and gameweek difficulty to decide
         """
         expected_num_clean_sheets_per_90 = float(player.fpl_player.clean_sheets_per_90)
-        if get_gameweek_difficulty_category(fixture_difficulty_rating) == GameWeekDifficultyCategory.EASY:
-            return 1.5*expected_num_clean_sheets_per_90
-        elif get_gameweek_difficulty_category(fixture_difficulty_rating) == GameWeekDifficultyCategory.MODERATE:
-            return 1*expected_num_clean_sheets_per_90
-        elif get_gameweek_difficulty_category(fixture_difficulty_rating) == GameWeekDifficultyCategory.HARD:
-            return 0.75*expected_num_clean_sheets_per_90
+        if (
+            get_gameweek_difficulty_category(fixture_difficulty_rating)
+            == GameWeekDifficultyCategory.EASY
+        ):
+            return 1.5 * expected_num_clean_sheets_per_90
+        elif (
+            get_gameweek_difficulty_category(fixture_difficulty_rating)
+            == GameWeekDifficultyCategory.MODERATE
+        ):
+            return 1 * expected_num_clean_sheets_per_90
+        elif (
+            get_gameweek_difficulty_category(fixture_difficulty_rating)
+            == GameWeekDifficultyCategory.HARD
+        ):
+            return 0.75 * expected_num_clean_sheets_per_90
         else:
-            warn(f"Invalid gameweek difficulty rating={fixture_difficulty_rating} provided")
+            warn(
+                f"Invalid gameweek difficulty rating={fixture_difficulty_rating} provided"
+            )
 
     @staticmethod
     def predict_num_goals_scored_from_fixture_difficulty_rating(
-        player,
-        fixture_difficulty_rating: float
-    )-> Optional[float]:
+        player, fixture_difficulty_rating: float
+    ) -> Optional[float]:
         """
         Computes the points contribution from goals scored
 
         uses expected_goals_per_90 and gameweek difficulty to decide
         """
         expected_num_goals_per_90 = float(player.fpl_player.expected_goals_per_90)
-        if get_gameweek_difficulty_category(fixture_difficulty_rating) == GameWeekDifficultyCategory.EASY:
-            return 1.5*expected_num_goals_per_90 # NEBUG IMPROVEMENT: tune this FACTOR by seeing what it predicts for top & not so top players
-        elif get_gameweek_difficulty_category(fixture_difficulty_rating) == GameWeekDifficultyCategory.MODERATE:
-            return 1*expected_num_goals_per_90 # NEBUG IMPROVEMENT: tune this FACTOR by seeing what it predicts for top & not so top players
-        elif get_gameweek_difficulty_category(fixture_difficulty_rating) == GameWeekDifficultyCategory.HARD:
-            return 0.75*expected_num_goals_per_90 # NEBUG IMPROVEMENT: tune this FACTOR by seeing what it predicts for top & not so top players
+        if (
+            get_gameweek_difficulty_category(fixture_difficulty_rating)
+            == GameWeekDifficultyCategory.EASY
+        ):
+            return (
+                1.5 * expected_num_goals_per_90
+            )  # NEBUG IMPROVEMENT: tune this FACTOR by seeing what it predicts for top & not so top players
+        elif (
+            get_gameweek_difficulty_category(fixture_difficulty_rating)
+            == GameWeekDifficultyCategory.MODERATE
+        ):
+            return (
+                1 * expected_num_goals_per_90
+            )  # NEBUG IMPROVEMENT: tune this FACTOR by seeing what it predicts for top & not so top players
+        elif (
+            get_gameweek_difficulty_category(fixture_difficulty_rating)
+            == GameWeekDifficultyCategory.HARD
+        ):
+            return (
+                0.75 * expected_num_goals_per_90
+            )  # NEBUG IMPROVEMENT: tune this FACTOR by seeing what it predicts for top & not so top players
         else:
-            warn(f"Invalid gameweek difficulty rating={fixture_difficulty_rating} provided")
+            warn(
+                f"Invalid gameweek difficulty rating={fixture_difficulty_rating} provided"
+            )
 
     @staticmethod
     def predict_num_assists_from_fixture_difficulty_rating(
-        player,
-        fixture_difficulty_rating: float
-    )-> Optional[float]:
+        player, fixture_difficulty_rating: float
+    ) -> Optional[float]:
         """
         Computes the points contribution from assists
 
         uses expected_assists_per_90 and gameweek difficulty to decide
         """
         expected_num_assists_per_90 = float(player.fpl_player.expected_assists_per_90)
-        if get_gameweek_difficulty_category(fixture_difficulty_rating) == GameWeekDifficultyCategory.EASY:
-            return 1.5*expected_num_assists_per_90 # NEBUG IMPROVEMENT: tune this FACTOR by seeing what it predicts for top & not so top players
-        elif get_gameweek_difficulty_category(fixture_difficulty_rating) == GameWeekDifficultyCategory.MODERATE:
-            return 1*expected_num_assists_per_90
-        elif get_gameweek_difficulty_category(fixture_difficulty_rating) == GameWeekDifficultyCategory.HARD:
-            return 0.75*expected_num_assists_per_90
+        if (
+            get_gameweek_difficulty_category(fixture_difficulty_rating)
+            == GameWeekDifficultyCategory.EASY
+        ):
+            return (
+                1.5 * expected_num_assists_per_90
+            )  # NEBUG IMPROVEMENT: tune this FACTOR by seeing what it predicts for top & not so top players
+        elif (
+            get_gameweek_difficulty_category(fixture_difficulty_rating)
+            == GameWeekDifficultyCategory.MODERATE
+        ):
+            return 1 * expected_num_assists_per_90
+        elif (
+            get_gameweek_difficulty_category(fixture_difficulty_rating)
+            == GameWeekDifficultyCategory.HARD
+        ):
+            return 0.75 * expected_num_assists_per_90
         else:
-            warn(f"Invalid gameweek difficulty rating={fixture_difficulty_rating} provided")
+            warn(
+                f"Invalid gameweek difficulty rating={fixture_difficulty_rating} provided"
+            )
 
     @staticmethod
     def predict_num_shots_saved_from_fixture_difficulty_rating(
-        player,
-        fixture_difficulty_rating: float
-    )-> Optional[float]:
+        player, fixture_difficulty_rating: float
+    ) -> Optional[float]:
         """
         Computes the points contribution from shot saves
         """
         expected_num_shots_saved_per_90 = float(player.fpl_player.saves_per_90)
         # NEBUG IMPROVEMENT: GOOD idea for goalkeeper GWD to be set correctly, to reflect the number of shots they'd face
-        # for example a hard fixture for a goalkeeper would be one where they face a lot of shots or not a lot of shots 
-        if get_gameweek_difficulty_category(fixture_difficulty_rating) == GameWeekDifficultyCategory.EASY:
-            return 0.5*expected_num_shots_saved_per_90
-        elif get_gameweek_difficulty_category(fixture_difficulty_rating) == GameWeekDifficultyCategory.MODERATE:
-            return 1*expected_num_shots_saved_per_90
-        elif get_gameweek_difficulty_category(fixture_difficulty_rating) == GameWeekDifficultyCategory.HARD:
-            return 1.3*expected_num_shots_saved_per_90
+        # for example a hard fixture for a goalkeeper would be one where they face a lot of shots or not a lot of shots
+        if (
+            get_gameweek_difficulty_category(fixture_difficulty_rating)
+            == GameWeekDifficultyCategory.EASY
+        ):
+            return 0.5 * expected_num_shots_saved_per_90
+        elif (
+            get_gameweek_difficulty_category(fixture_difficulty_rating)
+            == GameWeekDifficultyCategory.MODERATE
+        ):
+            return 1 * expected_num_shots_saved_per_90
+        elif (
+            get_gameweek_difficulty_category(fixture_difficulty_rating)
+            == GameWeekDifficultyCategory.HARD
+        ):
+            return 1.3 * expected_num_shots_saved_per_90
         else:
-            warn(f"Invalid gameweek difficulty rating={fixture_difficulty_rating} provided, could not predict shot saved")
-    
+            warn(
+                f"Invalid gameweek difficulty rating={fixture_difficulty_rating} provided, could not predict shot saved"
+            )
+
     @staticmethod
     def predict_num_goals_conceded_from_fixture_difficulty_rating(
-        player,
-        fixture_difficulty_rating: float
-    )-> Optional[float]:
+        player, fixture_difficulty_rating: float
+    ) -> Optional[float]:
         """
         Computes the points contribution from goals conceded
         """
-        expected_num_goals_conceded_per_90 = float(player.fpl_player.goals_conceded_per_90)
-        if get_gameweek_difficulty_category(fixture_difficulty_rating) == GameWeekDifficultyCategory.EASY:
-            return 0.5*expected_num_goals_conceded_per_90
-        elif get_gameweek_difficulty_category(fixture_difficulty_rating) == GameWeekDifficultyCategory.MODERATE:
-            return 1*expected_num_goals_conceded_per_90
-        elif get_gameweek_difficulty_category(fixture_difficulty_rating) == GameWeekDifficultyCategory.HARD:
-            return 1.3*expected_num_goals_conceded_per_90
+        expected_num_goals_conceded_per_90 = float(
+            player.fpl_player.goals_conceded_per_90
+        )
+        if (
+            get_gameweek_difficulty_category(fixture_difficulty_rating)
+            == GameWeekDifficultyCategory.EASY
+        ):
+            return 0.5 * expected_num_goals_conceded_per_90
+        elif (
+            get_gameweek_difficulty_category(fixture_difficulty_rating)
+            == GameWeekDifficultyCategory.MODERATE
+        ):
+            return 1 * expected_num_goals_conceded_per_90
+        elif (
+            get_gameweek_difficulty_category(fixture_difficulty_rating)
+            == GameWeekDifficultyCategory.HARD
+        ):
+            return 1.3 * expected_num_goals_conceded_per_90
         else:
-            warn(f"Invalid gameweek difficulty rating={fixture_difficulty_rating} provided, could not predict goals conceded")
-    
+            warn(
+                f"Invalid gameweek difficulty rating={fixture_difficulty_rating} provided, could not predict goals conceded"
+            )
+
     @staticmethod
     def predict_analytics_directly_related_to_points(
         player,
         number_of_gameweeks: int,
-    )-> PredictedAnalytics:
+    ) -> PredictedAnalytics:
         """
         Computes the expected points for the next number_of_gameweeks
         """
@@ -165,29 +228,66 @@ class Predict:
         expected_shots_saved_for_gameweeks = np.zeros(number_of_gameweeks)
         expected_goals_conceded_for_gameweeks = np.zeros(number_of_gameweeks)
 
-
-        for i, gameweek_fixture_difficulty_rating in enumerate(player.fixture_difficulty_ratings):
+        for i, gameweek_fixture_difficulty_rating in enumerate(
+            player.fixture_difficulty_ratings
+        ):
             total_expected_goals_for_gameweek = 0
             total_expected_assists_for_gameweek = 0
             total_expected_clean_sheets_for_gameweek = 0
             total_expected_shots_saved_for_gameweek = 0
             total_expected_goals_conceded_for_gameweek = 0
-            
-            for _,fixture_difficulty_rating in gameweek_fixture_difficulty_rating.items():
+
+            for (
+                _,
+                fixture_difficulty_rating,
+            ) in gameweek_fixture_difficulty_rating.items():
                 fdr = float(fixture_difficulty_rating)
-                total_expected_goals_for_gameweek += Predict.predict_num_goals_scored_from_fixture_difficulty_rating(player, fdr)
-                total_expected_assists_for_gameweek += Predict.predict_num_assists_from_fixture_difficulty_rating(player, fdr)
-                total_expected_clean_sheets_for_gameweek += Predict.predict_num_clean_sheets_from_fixture_difficulty_rating(player, fdr)
-                total_expected_shots_saved_for_gameweek += Predict.predict_num_shots_saved_from_fixture_difficulty_rating(player, fdr)
-                total_expected_goals_conceded_for_gameweek += Predict.predict_num_goals_conceded_from_fixture_difficulty_rating(player, fdr)
-            
-            expected_goals_for_gameweeks[i] = round(total_expected_goals_for_gameweek, 1)
-            expected_assists_for_gameweeks[i] = round(total_expected_assists_for_gameweek, 1)
-            expected_clean_sheets_for_gameweeks[i] = round(total_expected_clean_sheets_for_gameweek, 1)
-            expected_shots_saved_for_gameweeks[i] = round(total_expected_shots_saved_for_gameweek, 1)
-            expected_goals_conceded_for_gameweeks[i] = round(total_expected_goals_conceded_for_gameweek, 1)
+                total_expected_goals_for_gameweek += (
+                    Predict.predict_num_goals_scored_from_fixture_difficulty_rating(
+                        player, fdr
+                    )
+                )
+                total_expected_assists_for_gameweek += (
+                    Predict.predict_num_assists_from_fixture_difficulty_rating(
+                        player, fdr
+                    )
+                )
+                total_expected_clean_sheets_for_gameweek += (
+                    Predict.predict_num_clean_sheets_from_fixture_difficulty_rating(
+                        player, fdr
+                    )
+                )
+                total_expected_shots_saved_for_gameweek += (
+                    Predict.predict_num_shots_saved_from_fixture_difficulty_rating(
+                        player, fdr
+                    )
+                )
+                total_expected_goals_conceded_for_gameweek += (
+                    Predict.predict_num_goals_conceded_from_fixture_difficulty_rating(
+                        player, fdr
+                    )
+                )
+
+            expected_goals_for_gameweeks[i] = round(
+                total_expected_goals_for_gameweek, 1
+            )
+            expected_assists_for_gameweeks[i] = round(
+                total_expected_assists_for_gameweek, 1
+            )
+            expected_clean_sheets_for_gameweeks[i] = round(
+                total_expected_clean_sheets_for_gameweek, 1
+            )
+            expected_shots_saved_for_gameweeks[i] = round(
+                total_expected_shots_saved_for_gameweek, 1
+            )
+            expected_goals_conceded_for_gameweeks[i] = round(
+                total_expected_goals_conceded_for_gameweek, 1
+            )
 
         return Predict.PredictedAnalytics(
-            goals=expected_goals_for_gameweeks, assists=expected_assists_for_gameweeks, clean_sheets=expected_clean_sheets_for_gameweeks, shots_saved=expected_shots_saved_for_gameweeks, goals_conceded=expected_goals_conceded_for_gameweeks)
-    
-        
+            goals=expected_goals_for_gameweeks,
+            assists=expected_assists_for_gameweeks,
+            clean_sheets=expected_clean_sheets_for_gameweeks,
+            shots_saved=expected_shots_saved_for_gameweeks,
+            goals_conceded=expected_goals_conceded_for_gameweeks,
+        )
