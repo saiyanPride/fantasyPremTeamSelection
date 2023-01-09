@@ -2,7 +2,12 @@ import json
 import numpy as np
 from settings import POINTS_PER_ASSIST_DEFENDER, POINTS_PER_ASSIST_GOALKEEPER, POINTS_PER_ASSIST_MIDFIELDER, POINTS_PER_GOAL_DEFENDER, POINTS_PER_GOAL_GOALKEEPER, POINTS_PER_GOAL_MIDFIELDER
 from points_predictor import Predict
-from settings import FIXTURE_DIFFICULTY_RATINGS_FILEPATH, MAX_GAMEWEEKS,POINTS_PER_GOAL_FORWARD,POINTS_PER_ASSIST_FORWARD, POINTS_PER_CLEAN_SHEET_FORWARD,POINTS_PER_CLEAN_SHEET_GOALKEEPER,POINTS_PER_CLEAN_SHEET_DEFENDER,POINTS_PER_CLEAN_SHEET_MIDFIELDER 
+from settings import (
+    FIXTURE_DIFFICULTY_RATINGS_FILEPATH, MAX_GAMEWEEKS,POINTS_PER_GOAL_FORWARD,POINTS_PER_ASSIST_FORWARD, POINTS_PER_CLEAN_SHEET_FORWARD,POINTS_PER_CLEAN_SHEET_GOALKEEPER,POINTS_PER_CLEAN_SHEET_DEFENDER,POINTS_PER_CLEAN_SHEET_MIDFIELDER,
+    POINTS_PER_EVERY_THREE_SHOTS_SAVED_GOALKEEPER,
+    POINTS_PER_EVERY_TWO_GOALS_CONCEDED_GOALKEEPER,
+    POINTS_PER_EVERY_TWO_GOALS_CONCEDED_DEFENDER
+)
 from fpl.models.player import Player as FPLPlayer
 
 class Status(object):
@@ -137,6 +142,20 @@ class PlayerData(object):
             raise Exception(
                 f"Player has invalid position ({self.position}), cannot get points per cleansheet"
             )
+    
+    def _get_points_per_every_three_shots_saved_based_on_position(self):
+        if self.position != "GK":
+            return 0
+        else:
+            return POINTS_PER_EVERY_THREE_SHOTS_SAVED_GOALKEEPER
+
+    def _get_points_per_every_two_goals_conceded(self):
+        if self.position == "DEF":
+            return POINTS_PER_EVERY_TWO_GOALS_CONCEDED_DEFENDER
+        elif self.position == "GK":
+            return POINTS_PER_EVERY_TWO_GOALS_CONCEDED_GOALKEEPER
+        else:
+            return 0
     def _get_predicted_gameweek_points(self) -> list[float]:
         """
         Predicts the player's points for the next n gameweeks
@@ -144,6 +163,8 @@ class PlayerData(object):
         POINTS_PER_GOAL = self._get_points_per_goal_based_on_position()
         POINTS_PER_ASSIST = self._get_points_per_assist_based_on_position()
         POINTS_PER_CLEAN_SHEET = self._get_points_per_cleansheet_based_on_position()
+        POINTS_PER_EVERY_THREE_SHOTS_SAVED = self._get_points_per_every_three_shots_saved_based_on_position()
+        POINTS_PER_EVERY_TWO_GOALS_CONCEDED = self._get_points_per_every_two_goals_conceded()
 
         n = self.number_of_gameweeks
         predicted_analytics = Predict.predict_analytics_directly_related_to_points(player=self, number_of_gameweeks=n)
@@ -151,13 +172,18 @@ class PlayerData(object):
         points_contribution_from_assists: np.ndarray = POINTS_PER_ASSIST*predicted_analytics.assists
         points_contribution_from_clean_sheets: np.ndarray = POINTS_PER_CLEAN_SHEET*predicted_analytics.clean_sheets
 
+        number_of_three_shots_saved = predicted_analytics.shots_saved/3
+        points_contribution_from_shots_saved: np.ndarray = POINTS_PER_EVERY_THREE_SHOTS_SAVED*number_of_three_shots_saved
+
+        number_of_two_goals_conceded = predicted_analytics.goals_conceded/2
+        points_contribution_from_goals_conceded: np.ndarray = POINTS_PER_EVERY_TWO_GOALS_CONCEDED*number_of_two_goals_conceded
+
         # let's assume everyone gets max points for minutes
         # if minutes are equal for any 2 players, the one with goals, assists, cleansheets will rank higher
         points_contribution_from_minutes = np.full(n, 2) 
         # NEBUG: optional: improvement: consider whether working out bonus estimate is worth it
         points_contribution_from_bonus = np.full(n, 1)
         
-        # NEBUG: TODO add metrics that apply to mf, def and goalies
 
         predicted_points = (
             points_contribution_from_goals
@@ -165,6 +191,8 @@ class PlayerData(object):
             + points_contribution_from_bonus
             + points_contribution_from_minutes
             + points_contribution_from_clean_sheets
+            + points_contribution_from_shots_saved
+            + points_contribution_from_goals_conceded
         )
 
         # round values in predicted_points to 1 decimal place
