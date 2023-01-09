@@ -1,7 +1,7 @@
 import json
 import numpy as np
 from points_predictor import Predict
-from settings import FIXTURE_DIFFICULTY_RATINGS_FILEPATH, MAX_GAMEWEEKS,POINTS_PER_GOAL_FORWARD
+from settings import FIXTURE_DIFFICULTY_RATINGS_FILEPATH, MAX_GAMEWEEKS,POINTS_PER_GOAL_FORWARD,POINTS_PER_ASSIST_FORWARD
 from fpl.models.player import Player as FPLPlayer
 
 class Status(object):
@@ -126,14 +126,14 @@ class PlayerData(object):
             points_contribution_from_assists
             points_contribution_from_bonus
         """
-
         #TODO NEBUG: also factor in the likelihood player will get 60mins (if really injured points is 0), if player won't play just return 0
         # create numpy array of length self.number_of_gameweeks
         n = self.number_of_gameweeks
-        points_contribution_from_goals = POINTS_PER_GOAL_FORWARD*Predict.predict_number_of_goals_scored(player=self,number_of_gameweeks=n)
-        points_contribution_from_minutes = np.zeros(n)
-        points_contribution_from_assists = np.zeros(n)
-        points_contribution_from_bonus = np.zeros(n)
+        predicted_analytics = Predict.predict_analytics_directly_related_to_points(player=self, number_of_gameweeks=n)
+        points_contribution_from_goals: np.ndarray = POINTS_PER_GOAL_FORWARD*predicted_analytics.goals
+        points_contribution_from_minutes = np.zeros(n) # NEBUG: TODO: decide whether to include this or not, cna just base on goals and assists
+        points_contribution_from_assists: np.ndarray = POINTS_PER_ASSIST_FORWARD*predicted_analytics.assists
+        points_contribution_from_bonus = np.zeros(n) # NEBUG: TODO: decide whether to include this or not
 
         # predicted_points is the sum of the above 4 numpy arrays
         predicted_points = (
@@ -142,6 +142,9 @@ class PlayerData(object):
             + points_contribution_from_assists
             + points_contribution_from_bonus
         )
+
+        # round values in predicted_points to 1 decimal place
+        predicted_points = np.round(predicted_points, 1)
 
         # get average of numpy array predicted_points
         self.avg_predicted_points = np.mean(predicted_points)
