@@ -93,15 +93,20 @@ class PlayerData(object):
         self.number_of_gameweeks: int = number_of_gameweeks
         self.fpl_player: FPLPlayer = fpl_player
 
-        self.fixture_difficulty_ratings = self._get_fixture_diffiulty_ratings_from_file(
+        self.fixture_difficulty_ratings = self._get_fixture_difficulty_ratings_from_file(
             start_gameweek, number_of_gameweeks
         )
-        self.predicted_points = self._get_predicted_gameweek_points()
-        self.avg_predicted_points = None
+        self.predicted_points:np.ndarray = self._get_predicted_gameweek_points()
 
-    def _get_fixture_diffiulty_ratings_from_file(
+        self.avg_predicted_points = round(np.mean(self.predicted_points), 2)
+
+
+    def _get_fixture_difficulty_ratings_from_file(
         self, start_gameweek: int, n: int
     ) -> list[dict[str, int]]:
+        """
+        Fixture_difficulty_rating will be None if player isn't paying in a given gameweek
+        """
         assert n > 3, "n must be greater than 3"
 
         # get fixture difficulty rating from FIXTURE_DIFFICULTY_RATINGS_FILEPATH json file
@@ -114,7 +119,7 @@ class PlayerData(object):
         end_gameweek = min(start_gameweek + n - 1, MAX_GAMEWEEKS)
 
         fixture_difficulty_ratings: list[dict[str, int]] = [
-            fixture_dfficulty_rating_by_gameweek[str(gameweek)][self.club_name]
+            fixture_dfficulty_rating_by_gameweek[str(gameweek)].get(self.club_name)
             for gameweek in range(start_gameweek, end_gameweek + 1)
         ]
 
@@ -176,7 +181,7 @@ class PlayerData(object):
         else:
             return 0
 
-    def _get_predicted_gameweek_points(self) -> list[float]:
+    def _get_predicted_gameweek_points(self) -> np.ndarray:
         """
         Predicts the player's points for the next n gameweeks
         """
@@ -233,7 +238,4 @@ class PlayerData(object):
         # round values in predicted_points to 1 decimal place
         predicted_points = np.round(predicted_points, 1)
 
-        # get average of numpy array predicted_points
-        self.avg_predicted_points = np.mean(predicted_points)
-
-        return predicted_points.tolist()
+        return predicted_points

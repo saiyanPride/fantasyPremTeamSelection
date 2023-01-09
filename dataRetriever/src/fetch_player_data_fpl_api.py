@@ -223,7 +223,7 @@ class Display:
         player_table.align["Player"] = "l"  # Left align player names
 
         # sort the players by their form
-        player_analytics.sort(key=lambda player: player.form, reverse=True)
+        player_analytics.sort(key=lambda player: player.avg_predicted_points, reverse=True)
 
         # for each player, add a row to the table
         for player in player_analytics[:50]:
