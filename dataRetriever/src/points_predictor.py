@@ -28,9 +28,9 @@ class Predict:
             self,
             goals: np.ndarray,
             assists: np.ndarray,
+            clean_sheets: np.ndarray = None,
             bonus: Optional[np.ndarray] = None,
             minutes_played: Optional[np.ndarray] = None,
-            clean_sheets: Optional[np.ndarray] = None,
             own_goals: Optional[np.ndarray] = None,
             goals_conceded: Optional[np.ndarray] = None,
             penalties_missed: Optional[np.ndarray] = None,
@@ -54,14 +54,24 @@ class Predict:
         
 
     @staticmethod
-    def compute_points_contribution_from_minutes_played(
-        player, 
-    ):
+    def predict_num_clean_sheets_from_fixture_difficulty_rating(
+        player,
+        fixture_difficulty_rating: float
+    )-> Optional[float]:
         """
-        Computes the points contribution from minutes played
-        """
-        return [] #TODO: NEBUG: implement this function OR DELETE THIS FUNCTION
+        Computes the points contribution from clean sheets
 
+        uses expected_clean_sheets_per_90 and gameweek difficulty to decide
+        """
+        expected_num_clean_sheets_per_90 = float(player.fpl_player.clean_sheets_per_90)
+        if get_gameweek_difficulty_category(fixture_difficulty_rating) == GameWeekDifficultyCategory.EASY:
+            return 1.5*expected_num_clean_sheets_per_90
+        elif get_gameweek_difficulty_category(fixture_difficulty_rating) == GameWeekDifficultyCategory.MODERATE:
+            return 1*expected_num_clean_sheets_per_90
+        elif get_gameweek_difficulty_category(fixture_difficulty_rating) == GameWeekDifficultyCategory.HARD:
+            return 0.75*expected_num_clean_sheets_per_90
+        else:
+            warn(f"Invalid gameweek difficulty rating={fixture_difficulty_rating} provided")
 
     @staticmethod
     def predict_num_goals_scored_from_fixture_difficulty_rating(
@@ -73,15 +83,15 @@ class Predict:
 
         uses expected_goals_per_90 and gameweek difficulty to decide
         """
-        expected_goals_per_90 = float(player.fpl_player.expected_goals_per_90)
+        expected_num_goals_per_90 = float(player.fpl_player.expected_goals_per_90)
         if get_gameweek_difficulty_category(fixture_difficulty_rating) == GameWeekDifficultyCategory.EASY:
-            return 1.5*expected_goals_per_90 # NEBUG IMPROVEMENT: tune this FACTOR by seeing what it predicts for top & not so top players
+            return 1.5*expected_num_goals_per_90 # NEBUG IMPROVEMENT: tune this FACTOR by seeing what it predicts for top & not so top players
         elif get_gameweek_difficulty_category(fixture_difficulty_rating) == GameWeekDifficultyCategory.MODERATE:
-            return 1*expected_goals_per_90 # NEBUG IMPROVEMENT: tune this FACTOR by seeing what it predicts for top & not so top players
+            return 1*expected_num_goals_per_90 # NEBUG IMPROVEMENT: tune this FACTOR by seeing what it predicts for top & not so top players
         elif get_gameweek_difficulty_category(fixture_difficulty_rating) == GameWeekDifficultyCategory.HARD:
-            return 0.75*expected_goals_per_90 # NEBUG IMPROVEMENT: tune this FACTOR by seeing what it predicts for top & not so top players
+            return 0.75*expected_num_goals_per_90 # NEBUG IMPROVEMENT: tune this FACTOR by seeing what it predicts for top & not so top players
         else:
-            warn(f"Invalid gameweek difficulty rating={fixture_difficulty_rating} passed")
+            warn(f"Invalid gameweek difficulty rating={fixture_difficulty_rating} provided")
 
     @staticmethod
     def predict_num_assists_from_fixture_difficulty_rating(
@@ -93,15 +103,15 @@ class Predict:
 
         uses expected_assists_per_90 and gameweek difficulty to decide
         """
-        expected_assists_per_90 = float(player.fpl_player.expected_assists_per_90)
+        expected_num_assists_per_90 = float(player.fpl_player.expected_assists_per_90)
         if get_gameweek_difficulty_category(fixture_difficulty_rating) == GameWeekDifficultyCategory.EASY:
-            return 1.5*expected_assists_per_90 # NEBUG IMPROVEMENT: tune this FACTOR by seeing what it predicts for top & not so top players
+            return 1.5*expected_num_assists_per_90 # NEBUG IMPROVEMENT: tune this FACTOR by seeing what it predicts for top & not so top players
         elif get_gameweek_difficulty_category(fixture_difficulty_rating) == GameWeekDifficultyCategory.MODERATE:
-            return 1*expected_assists_per_90
+            return 1*expected_num_assists_per_90
         elif get_gameweek_difficulty_category(fixture_difficulty_rating) == GameWeekDifficultyCategory.HARD:
-            return 0.75*expected_assists_per_90
+            return 0.75*expected_num_assists_per_90
         else:
-            warn(f"Invalid gameweek difficulty rating={fixture_difficulty_rating} passed")
+            warn(f"Invalid gameweek difficulty rating={fixture_difficulty_rating} provided")
         
 
     @staticmethod
@@ -114,19 +124,23 @@ class Predict:
         """
         expected_goals_for_gameweeks = np.zeros(number_of_gameweeks)
         expected_assists_for_gameweeks = np.zeros(number_of_gameweeks)
+        expected_clean_sheets_for_gameweeks = np.zeros(number_of_gameweeks)
 
 
         for i, gameweek_fixture_difficulty_rating in enumerate(player.fixture_difficulty_ratings):
             total_expected_goals_for_gameweek = 0
             total_expected_assists_for_gameweek = 0
+            total_expected_clean_sheets_for_gameweek = 0
             
             for _,fixture_difficulty_rating in gameweek_fixture_difficulty_rating.items():
                 fdr = float(fixture_difficulty_rating)
                 total_expected_goals_for_gameweek += Predict.predict_num_goals_scored_from_fixture_difficulty_rating(player, fdr)
                 total_expected_assists_for_gameweek += Predict.predict_num_assists_from_fixture_difficulty_rating(player, fdr)
+                total_expected_clean_sheets_for_gameweek += Predict.predict_num_clean_sheets_from_fixture_difficulty_rating(player, fdr)
             expected_goals_for_gameweeks[i] = round(total_expected_goals_for_gameweek, 1)
             expected_assists_for_gameweeks[i] = round(total_expected_assists_for_gameweek, 1)
+            expected_clean_sheets_for_gameweeks[i] = round(total_expected_clean_sheets_for_gameweek, 1)
 
-        return Predict.PredictedAnalytics(goals=expected_goals_for_gameweeks, assists=expected_assists_for_gameweeks)
+        return Predict.PredictedAnalytics(goals=expected_goals_for_gameweeks, assists=expected_assists_for_gameweeks, clean_sheets=expected_clean_sheets_for_gameweeks)
     
         

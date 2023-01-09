@@ -1,7 +1,8 @@
 import json
 import numpy as np
+from settings import POINTS_PER_ASSIST_DEFENDER, POINTS_PER_ASSIST_GOALKEEPER, POINTS_PER_ASSIST_MIDFIELDER, POINTS_PER_GOAL_DEFENDER, POINTS_PER_GOAL_GOALKEEPER, POINTS_PER_GOAL_MIDFIELDER
 from points_predictor import Predict
-from settings import FIXTURE_DIFFICULTY_RATINGS_FILEPATH, MAX_GAMEWEEKS,POINTS_PER_GOAL_FORWARD,POINTS_PER_ASSIST_FORWARD
+from settings import FIXTURE_DIFFICULTY_RATINGS_FILEPATH, MAX_GAMEWEEKS,POINTS_PER_GOAL_FORWARD,POINTS_PER_ASSIST_FORWARD, POINTS_PER_CLEAN_SHEET_FORWARD,POINTS_PER_CLEAN_SHEET_GOALKEEPER,POINTS_PER_CLEAN_SHEET_DEFENDER,POINTS_PER_CLEAN_SHEET_MIDFIELDER 
 from fpl.models.player import Player as FPLPlayer
 
 class Status(object):
@@ -95,52 +96,75 @@ class PlayerData(object):
 
         return fixture_difficulty_ratings
 
-    def _get_predicted_gameweek_points(self):
-        """
-        Predicts the player's scores for the next n gameweeks
-        """
 
-        # set predicted points for this player based on position
-        if self.position == "DEF":
-            return self._get_predicted_points_for_defender()
+    def _get_points_per_goal_based_on_position(self):
+        if self.position == "FWD":
+            return POINTS_PER_GOAL_FORWARD
         elif self.position == "MID":
-            return self._get_predicted_points_for_midfielder()
-        elif self.position == "FWD":
-            return self._get_predicted_points_for_forward()
+            return POINTS_PER_GOAL_MIDFIELDER
+        elif self.position == "DEF":
+            return POINTS_PER_GOAL_DEFENDER
         elif self.position == "GK":
-            return self._get_predicted_points_for_goalkeeper()
+            return POINTS_PER_GOAL_GOALKEEPER
         else:
             raise Exception(
-                f"Player has invalid position ({self.position}), cannot predict points"
+                f"Player has invalid position ({self.position}), cannot get points per goal"
             )
 
-    def _get_predicted_points_for_forward(
-        self,
-    ):
+    def _get_points_per_assist_based_on_position(self):
+        if self.position == "FWD":
+            return POINTS_PER_ASSIST_FORWARD
+        elif self.position == "MID":
+            return POINTS_PER_ASSIST_MIDFIELDER
+        elif self.position == "DEF":
+            return POINTS_PER_ASSIST_DEFENDER
+        elif self.position == "GK":
+            return POINTS_PER_ASSIST_GOALKEEPER
+        else:
+            raise Exception(
+                f"Player has invalid position ({self.position}), cannot get points per assist"
+            )
+    def _get_points_per_cleansheet_based_on_position(self):
+        if self.position == "FWD":
+            return POINTS_PER_CLEAN_SHEET_FORWARD
+        elif self.position == "MID":
+            return POINTS_PER_CLEAN_SHEET_MIDFIELDER
+        elif self.position == "DEF":
+            return POINTS_PER_CLEAN_SHEET_DEFENDER
+        elif self.position == "GK":
+            return POINTS_PER_CLEAN_SHEET_GOALKEEPER
+        else:
+            raise Exception(
+                f"Player has invalid position ({self.position}), cannot get points per cleansheet"
+            )
+    def _get_predicted_gameweek_points(self) -> list[float]:
         """
-        Sets the predicted points for a forward
+        Predicts the player's points for the next n gameweeks
+        """
+        POINTS_PER_GOAL = self._get_points_per_goal_based_on_position()
+        POINTS_PER_ASSIST = self._get_points_per_assist_based_on_position()
+        POINTS_PER_CLEAN_SHEET = self._get_points_per_cleansheet_based_on_position()
 
-        The total score is composed of:
-            points_contribution_from_minutes
-            points_contribution_from_goals
-            points_contribution_from_assists
-            points_contribution_from_bonus
-        """
-        #TODO NEBUG: also factor in the likelihood player will get 60mins (if really injured points is 0), if player won't play just return 0
-        # create numpy array of length self.number_of_gameweeks
         n = self.number_of_gameweeks
         predicted_analytics = Predict.predict_analytics_directly_related_to_points(player=self, number_of_gameweeks=n)
-        points_contribution_from_goals: np.ndarray = POINTS_PER_GOAL_FORWARD*predicted_analytics.goals
-        points_contribution_from_minutes = np.zeros(n) # NEBUG: TODO: decide whether to include this or not, cna just base on goals and assists
-        points_contribution_from_assists: np.ndarray = POINTS_PER_ASSIST_FORWARD*predicted_analytics.assists
-        points_contribution_from_bonus = np.zeros(n) # NEBUG: TODO: decide whether to include this or not
+        points_contribution_from_goals: np.ndarray = POINTS_PER_GOAL*predicted_analytics.goals
+        points_contribution_from_assists: np.ndarray = POINTS_PER_ASSIST*predicted_analytics.assists
+        points_contribution_from_clean_sheets: np.ndarray = POINTS_PER_CLEAN_SHEET*predicted_analytics.clean_sheets
 
-        # predicted_points is the sum of the above 4 numpy arrays
+        # let's assume everyone gets max points for minutes
+        # if minutes are equal for any 2 players, the one with goals, assists, cleansheets will rank higher
+        points_contribution_from_minutes = np.full(n, 2) 
+        # NEBUG: optional: improvement: consider whether working out bonus estimate is worth it
+        points_contribution_from_bonus = np.full(n, 1)
+        
+        # NEBUG: TODO add metrics that apply to mf, def and goalies
+
         predicted_points = (
             points_contribution_from_goals
-            + points_contribution_from_minutes
             + points_contribution_from_assists
             + points_contribution_from_bonus
+            + points_contribution_from_minutes
+            + points_contribution_from_clean_sheets
         )
 
         # round values in predicted_points to 1 decimal place
@@ -150,71 +174,3 @@ class PlayerData(object):
         self.avg_predicted_points = np.mean(predicted_points)
 
         return predicted_points.tolist()
-
-    def _get_predicted_points_for_midfielder(
-        self, 
-    ):
-        return None  # TODO: NEBUG: implement this function
-    
-    def _get_predicted_points_for_defender(
-        self, 
-    ) -> list[float]:
-        """Returns a list of predicted points for the next n gameweeks for a defender"""
-        return None  #  TODO: NEBUG: implement this function
-
-    def _get_predicted_points_for_goalkeeper(
-        self, 
-    ):
-        return None  # TOOD: NEBUG: implement this function
-
-    def getGameweekScoreEstimates(
-        self, gameweekDifficultyList, currentGameWeekNo
-    ):  # TODO NEBUG: DELETE THIS FUNCTION
-        """
-        Calculates a score out of 100 for the player
-        This score gives an indication of the players chances of obtaining large fantasy points during `currentGameWeekNo`
-        The rules for determining a player's score depends on his position
-        Goal scoring record has a much larger contribution for striker's scores than defender's scores
-        """
-        maxGWD = 5.0  # GWD -> gameweek difficulty
-        maxForm = 10.0
-        maxBonus = currentGameWeekNo * 3.0
-        maxGoalsAndAssists = currentGameWeekNo + currentGameWeekNo / 2.0
-
-        if self.position == "DEF":
-            self.gameweekScores = [
-                85 * ((maxGWD - gwd + 1) / maxGWD)
-                + 15 * ((self.goals + self.assists) / maxGoalsAndAssists)
-                for gwd in gameweekDifficultyList
-            ]
-        elif self.position == "MID":
-            # Score =40%(GWD),  45%(goals+assists) 10%Form   5% Bonus
-            self.gameweekScores = [
-                40 * ((maxGWD - gwd + 1) / maxGWD)
-                + 45 * ((self.goals + self.assists) / maxGoalsAndAssists)
-                + 10 * (self.form / maxForm)
-                + 5 * (self.bonus / maxBonus)
-                for gwd in gameweekDifficultyList
-            ]
-        elif self.position == "FWD":
-            # Score =30%(GWD),  55%(goals+assists) 10%Form   5% Bonus
-            self.gameweekScores = [
-                30 * ((maxGWD - gwd + 1) / maxGWD)
-                + 55 * ((self.goals + self.assists) / maxGoalsAndAssists)
-                + 10 * (self.form / maxForm)
-                + 5 * (self.bonus / maxBonus)
-                for gwd in gameweekDifficultyList
-            ]
-        elif self.position == "GKP":
-            # Score = 60*(GWD) + 28%(clean sheets) + 2%Bonus
-            self.gameweekScores = [
-                60 * ((maxGWD - gwd + 1) / maxGWD)
-                + 28 * (self.cleansheets / float(currentGameWeekNo))
-                + 2 * (self.bonus / maxBonus)
-                for gwd in gameweekDifficultyList
-            ]
-        else:
-            raise ValueError(
-                "%s has an invalid position: %s" % (self.name, self.position)
-            )
-        # print ("%s score for next week is: %s " %(self.name, str(self.gameweekScores[0])))
