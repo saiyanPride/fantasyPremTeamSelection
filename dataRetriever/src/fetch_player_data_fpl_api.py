@@ -219,11 +219,12 @@ class Display:
             "Cleansheets",
             "AvgPredictedPoints",
             "PredictedPoints",
+            "Score"
         ]
         player_table.align["Player"] = "l"  # Left align player names
 
         # sort the players by their form
-        player_analytics.sort(key=lambda player: player.avg_predicted_points, reverse=True)
+        player_analytics.sort(key=lambda player: player.avg_predicted_points * player.form, reverse=True)
 
         # for each player, add a row to the table
         for player in player_analytics[:50]:
@@ -240,7 +241,8 @@ class Display:
                     player.bonus,
                     player.cleansheets,
                     player.avg_predicted_points,
-                    player.predicted_points
+                    player.predicted_points,
+                    player.score,
                 ]
             )
 

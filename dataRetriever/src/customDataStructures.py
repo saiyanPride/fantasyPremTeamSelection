@@ -24,6 +24,7 @@ from settings import (
 )
 from fpl.models.player import Player as FPLPlayer
 
+from player_score_calculation import PlayerScore
 
 class Status(object):
     def __init__(
@@ -83,7 +84,7 @@ class PlayerData(object):
         self.name = name
         self.position = position
         self.value = value
-        self.form = form
+        self.form: float = float(form)
         self.minutesPlayed = minutesPlayed
         self.goals = goals
         self.assists = assists
@@ -99,6 +100,8 @@ class PlayerData(object):
         self.predicted_points:np.ndarray = self._get_predicted_gameweek_points()
 
         self.avg_predicted_points = round(np.mean(self.predicted_points), 2)
+
+        self.score: float = PlayerScore.compute_player_score_by_predicted_points_and_form(self)
 
 
     def _get_fixture_difficulty_ratings_from_file(
