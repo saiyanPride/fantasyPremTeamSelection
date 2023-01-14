@@ -1,5 +1,6 @@
 import asyncio
 import json
+from typing import Any, Callable
 
 import aiohttp
 from prettytable import PrettyTable
@@ -9,7 +10,11 @@ from fpl.models.player import Player as FPLPlayer
 
 from customDataStructures import PlayerData
 from utility import warn
-from settings import DEFAULT_NUMBER_OF_GAMWEEKS_TO_PREDICT, FIXTURE_DIFFICULTY_RATINGS_FILEPATH, MAX_GAMEWEEKS
+from settings import (
+    DEFAULT_NUMBER_OF_GAMWEEKS_TO_PREDICT,
+    FIXTURE_DIFFICULTY_RATINGS_FILEPATH,
+    MAX_GAMEWEEKS,
+)
 
 
 async def initialise():
@@ -29,7 +34,6 @@ async def initialise():
                 f"Using gameweek {CURRENT_GAMEWEEK} instead of current gameweek {fpl_client.current_gameweek}"
             )
 
-
         # get teams (intentionally wait until complete as other methods need this info)
         teams = await fpl_client.get_teams()
         global TEAM_ID_TO_TEAM_NAME
@@ -42,9 +46,11 @@ async def initialise():
 
         # create to get fixture difficulty ratings
         fixture_difficulty_ratings_task = asyncio.create_task(
-            get_and_persist_fixture_difficulty_ratings(fpl_client=fpl_client, current_gameweek = CURRENT_GAMEWEEK)
+            get_and_persist_fixture_difficulty_ratings(
+                fpl_client=fpl_client, current_gameweek=CURRENT_GAMEWEEK
+            )
         )
-        
+
         # wait for both tasks to complete
         players, fixture_difficulty_ratings_by_gameweek = await asyncio.gather(
             players_task, fixture_difficulty_ratings_task
@@ -54,7 +60,12 @@ async def initialise():
 
 
 async def main():
-    players, teams, fixture_difficulty_ratings_by_gameweek, current_gameweek = await initialise()
+    (
+        players,
+        teams,
+        fixture_difficulty_ratings_by_gameweek,
+        current_gameweek,
+    ) = await initialise()
 
     Display.display_fixture_difficulty_ratings(fixture_difficulty_ratings_by_gameweek)
 
@@ -69,12 +80,27 @@ async def main():
         )
         # if user doesn't press Y, program should warn that it is using the default fixture difficulty ratings
         if user_input.lower() != "y":
-            warn(
-                f"Using default fixture difficulty ratings!!"
-            )
-    player_analytics = compute_player_analytics_for_next_n_gameweeks(players, current_gameweek, n=5)
+            warn(f"Using default fixture difficulty ratings!!")
+    player_analytics = compute_player_analytics_for_next_n_gameweeks(
+        players, current_gameweek, n=5
+    )
 
     Display.display_player_analytics(player_analytics, TEAM_ID_TO_TEAM_NAME)
+
+    print("displaying your currently selected players")
+    # ask the user to ensure they player ids for their current team selection
+    current_team_selection_player_ids_file_name = "current_team_selection_player_ids.json"
+    input(
+        f"Please ensure that you have updated {current_team_selection_player_ids_file_name}  press enter to continue: "
+    )
+
+    # read json from file named `current_team_selection_player_ids_file_name`
+    with open(current_team_selection_player_ids_file_name, "r") as f:
+        my_current_selected_players_ids = json.load(f)["player_ids"]
+
+    sort_property_lambda = lambda player: player.predicted_points[0]
+
+    Display.display_players_by_id(player_analytics, my_current_selected_players_ids, TEAM_ID_TO_TEAM_NAME, sort_property_lambda)
 
 
 async def get_and_persist_fixture_difficulty_ratings(
@@ -90,7 +116,9 @@ async def get_and_persist_fixture_difficulty_ratings(
 
     # create task to get fixtures for gameweeks between current_gameweek and min(current_gameweek+n, 38)
     fixtures_tasks = []
-    for gameweek in range(current_gameweek, min(current_gameweek + n, MAX_GAMEWEEKS+1)):
+    for gameweek in range(
+        current_gameweek, min(current_gameweek + n, MAX_GAMEWEEKS + 1)
+    ):
         fixtures_tasks.append(
             asyncio.create_task(fpl_client.get_fixtures_by_gameweek(gameweek))
         )
@@ -100,7 +128,8 @@ async def get_and_persist_fixture_difficulty_ratings(
 
     # for each gameweek, get the fixture difficulty ratings
     for gameweek, fixtures in zip(
-        range(current_gameweek, min(current_gameweek + n, MAX_GAMEWEEKS+1)), fixtures_by_gameweek
+        range(current_gameweek, min(current_gameweek + n, MAX_GAMEWEEKS + 1)),
+        fixtures_by_gameweek,
     ):
         fixture_difficulty_ratings_by_gameweek[gameweek] = {}
         # for each fixture, get the fixture difficulty rating
@@ -201,12 +230,16 @@ class Display:
                 fdr_table.add_row([team, opponent, difficulty_rating])
         print(fdr_table)
 
+    # create a static method to display players whose id is in a set provided, and order by their score
+           
     @staticmethod
-    def display_player_analytics(
-        player_analytics: list[PlayerData], team_id_to_team_name: dict[int, str]
+    def display_players_by_id(
+        player_analytics: list[PlayerData], player_ids: set[int], team_id_to_team_name: dict[int, str],
+        get_player_property_to_sort_by: Callable[[PlayerData], Any]
     ):
         player_table = PrettyTable()
         player_table.field_names = [
+            "Id",
             "Player",
             "Club",
             "Position",
@@ -219,17 +252,86 @@ class Display:
             "Cleansheets",
             "AvgPredictedPoints",
             "PredictedPoints",
-            "Score"
+            "Score",
+        ]
+        player_table.align["Player"] = "l"
+
+        player_analytics.sort(key=get_player_property_to_sort_by, reverse=True)
+
+        # create deep copy of player_ids
+        player_ids_copy = player_ids.copy()
+        for player_data in player_analytics:
+            if not player_ids_copy: # all players have been added
+                break
+            if player_data.fpl_player.id in player_ids_copy:
+                player_table.add_row(
+                    [
+                        player_data.fpl_player.id,
+                        player_data.name,
+                        team_id_to_team_name[player_data.club_id],
+                        player_data.position,
+                        player_data.value,
+                        player_data.form,
+                        player_data.minutesPlayed,
+                        player_data.goals,
+                        player_data.assists,
+                        player_data.bonus,
+                        player_data.cleansheets,
+                        player_data.avg_predicted_points,
+                        player_data.predicted_points,
+                        player_data.score,
+                    ]
+                )
+                # remove player.id from player_ids_copy
+                player_ids_copy.remove(player_data.fpl_player.id)
+        print(player_table)
+
+    @staticmethod
+    def display_player_analytics(
+        player_analytics: list[PlayerData], team_id_to_team_name: dict[int, str]
+    ):
+        player_table = PrettyTable()
+        player_table.field_names = [
+            "Id",
+            "Player",
+            "Club",
+            "Position",
+            "Price",
+            "Form",
+            "MinutesPlayed",
+            "Goals",
+            "Assists",
+            "Bonus",
+            "Cleansheets",
+            "AvgPredictedPoints",
+            "PredictedPoints",
+            "Score",
         ]
         player_table.align["Player"] = "l"  # Left align player names
 
         # sort the players by their form
-        player_analytics.sort(key=lambda player: player.avg_predicted_points * player.form, reverse=True)
+        player_analytics.sort(
+            key=lambda player: player.avg_predicted_points * player.form, reverse=True
+        )
 
-        # for each player, add a row to the table
-        for player in player_analytics[:50]:
+        max_num_players_to_display = 50
+        positions_to_display = {"GK", "DEF", "MID", "FWD"}
+        player_id_filter = {}
+
+        num_players_added_to_table = 0
+        for player in player_analytics:
+            # NEBUG if player.minutesPlayed < 900: continue # only show players who have played at least 900 minutes
+            if num_players_added_to_table >= max_num_players_to_display:
+                break
+            else:
+                if player.position not in positions_to_display:
+                    continue
+                if player_id_filter and player.fpl_player.id not in player_id_filter:
+                    continue
+
             player_table.add_row(
                 [
+                    player.fpl_player.id,
                     player.name,
                     team_id_to_team_name[player.club_id],
                     player.position,
@@ -245,6 +347,7 @@ class Display:
                     player.score,
                 ]
             )
+            num_players_added_to_table += 1
 
         print(player_table)
 
@@ -272,7 +375,7 @@ def compute_player_analytics_for_next_n_gameweeks(
             cleansheets=player.clean_sheets,
             start_gameweek=current_gameweek,
             number_of_gameweeks=n,
-            fpl_player= player,
+            fpl_player=player,
         )
         player_analytics.append(player_data)
 
