@@ -97,6 +97,7 @@ class PlayerData(object):
         self.fixture_difficulty_ratings = self._get_fixture_difficulty_ratings_from_file(
             start_gameweek, number_of_gameweeks
         )
+        
         self.predicted_points:np.ndarray = self._get_predicted_gameweek_points()
 
         self.avg_predicted_points = round(np.mean(self.predicted_points), 2)

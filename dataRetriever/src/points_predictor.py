@@ -237,40 +237,41 @@ class Predict:
             total_expected_shots_saved_for_gameweek = 0
             total_expected_goals_conceded_for_gameweek = 0
 
-            for (
-                _,
-                fixture_difficulty_rating,
-            ) in gameweek_fixture_difficulty_rating.items():
-                if fixture_difficulty_rating is None:
-                    total_expected_goals_for_gameweek += 0
-                    total_expected_assists_for_gameweek += 0
-                    total_expected_clean_sheets_for_gameweek += 0
-                    total_expected_shots_saved_for_gameweek += 0
-                    total_expected_goals_conceded_for_gameweek += 0
-                    continue
-                
-                fdr = float(fixture_difficulty_rating)
-                total_expected_goals_for_gameweek += (
-                    Predict.predict_num_goals_scored_from_fixture_difficulty_rating(
-                        player, fdr
+            if gameweek_fixture_difficulty_rating:
+                for (
+                    _,
+                    fixture_difficulty_rating,
+                ) in gameweek_fixture_difficulty_rating.items():
+                    if fixture_difficulty_rating is None:
+                        total_expected_goals_for_gameweek += 0
+                        total_expected_assists_for_gameweek += 0
+                        total_expected_clean_sheets_for_gameweek += 0
+                        total_expected_shots_saved_for_gameweek += 0
+                        total_expected_goals_conceded_for_gameweek += 0
+                        continue
+                    
+                    fdr = float(fixture_difficulty_rating)
+                    total_expected_goals_for_gameweek += (
+                        Predict.predict_num_goals_scored_from_fixture_difficulty_rating(
+                            player, fdr
+                        )
                     )
-                )
-                total_expected_assists_for_gameweek += (
-                    Predict.predict_num_assists_from_fixture_difficulty_rating(
-                        player, fdr
+                    total_expected_assists_for_gameweek += (
+                        Predict.predict_num_assists_from_fixture_difficulty_rating(
+                            player, fdr
+                        )
                     )
-                )
-                total_expected_clean_sheets_for_gameweek += (
-                    Predict.predict_num_clean_sheets_from_fixture_difficulty_rating(
-                        player, fdr
+                    total_expected_clean_sheets_for_gameweek += (
+                        Predict.predict_num_clean_sheets_from_fixture_difficulty_rating(
+                            player, fdr
+                        )
                     )
-                )
-                total_expected_shots_saved_for_gameweek += (
-                    Predict.predict_num_shots_saved_from_fixture_difficulty_rating(
-                        player, fdr
+                    total_expected_shots_saved_for_gameweek += (
+                        Predict.predict_num_shots_saved_from_fixture_difficulty_rating(
+                            player, fdr
+                        )
                     )
-                )
-                total_expected_goals_conceded_for_gameweek += (
+                    total_expected_goals_conceded_for_gameweek += (
                     Predict.predict_num_goals_conceded_from_fixture_difficulty_rating(
                         player, fdr
                     )
