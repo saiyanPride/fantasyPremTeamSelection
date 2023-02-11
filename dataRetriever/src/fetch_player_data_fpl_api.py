@@ -22,10 +22,10 @@ async def initialise():
         fpl_client = FPL(session)
 
         global CURRENT_GAMEWEEK
-        CURRENT_GAMEWEEK = fpl_client.current_gameweek
+        CURRENT_GAMEWEEK = int(fpl_client.current_gameweek) + 1
 
         user_input = input(
-            f"Do you want to continue using current gameweek = {CURRENT_GAMEWEEK}? (Y/N): "
+            f"Do you want to continue using current gameweek as gw {CURRENT_GAMEWEEK}? (Y/N): "
         )
         if user_input.lower() != "y":
             # ask user to input the gameweek number to use
